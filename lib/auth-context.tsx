@@ -10,7 +10,6 @@ export interface User {
   name: string
   email: string
   image: string
-  accessToken?: string
 }
 
 // Define auth context type
@@ -40,13 +39,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/auth/signin")
   }
 
+  console.log('Session data:', session)
+
   const user = session?.user ? {
     id: session.user.id as string,
     name: session.user.name || "",
     email: session.user.email || "",
     image: session.user.image || "",
-    accessToken: session.user.accessToken as string,
   } : null
+
+  console.log('User data in context:', user)
 
   return (
     <AuthContext.Provider
