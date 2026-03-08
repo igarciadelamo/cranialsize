@@ -8,6 +8,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useAuth } from "@/lib/auth-context"
+import { patientService } from "@/lib/api-service"
 import { usePatientStore } from "@/lib/patient-store"
 import type { Patient } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -26,16 +28,19 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
   const [lastName, setLastName] = useState("")
   const [birthDate, setBirthDate] = useState<Date>()
   const [birthHeadCircumference, setBirthHeadCircumference] = useState<string>("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<{
     firstName?: string
     lastName?: string
     birthDate?: string
     birthHeadCircumference?: string
+    api?: string
   }>({})
 
+  const { accessToken } = useAuth()
   const { addPatient } = usePatientStore()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const newErrors: {
@@ -60,17 +65,31 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
     setErrors(newErrors)
 
     if (Object.keys(newErrors).length === 0 && birthDate) {
-      const newPatient = {
-        id: Date.now().toString(),
-        firstName,
-        lastName,
-        birthDate,
-        birthHeadCircumference: birthHeadCircumference ? parseFloat(birthHeadCircumference) : undefined,
-        measurements: [],
-      }
+      setIsSubmitting(true)
+      try {
+        const created = await patientService.create(accessToken!, {
+          firstName,
+          lastName,
+          birthDate: birthDate.toISOString(),
+          birthHeadCircumference: birthHeadCircumference ? parseFloat(birthHeadCircumference) : undefined,
+        })
 
-      addPatient(newPatient)
-      onComplete(newPatient)
+        const newPatient: Patient = {
+          id: created.id,
+          firstName: created.firstName,
+          lastName: created.lastName,
+          birthDate: new Date(created.birthDate),
+          birthHeadCircumference: created.birthHeadCircumference ?? undefined,
+          measurements: [],
+        }
+
+        addPatient(newPatient)
+        onComplete(newPatient)
+      } catch (e) {
+        setErrors((prev) => ({ ...prev, api: "Error saving patient. Please try again." }))
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
@@ -174,16 +193,20 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
             </div>
           </form>
         </CardContent>
+        {errors.api && (
+          <p className="text-sm text-red-500 px-6 pb-2">{errors.api}</p>
+        )}
         <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={onCancel}>
+          <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button
             type="submit"
             form="new-patient-form"
+            disabled={isSubmitting}
             className="bg-gradient-primary hover:opacity-90 transition-opacity"
           >
-            Save Patient
+            {isSubmitting ? "Saving..." : "Save Patient"}
           </Button>
         </CardFooter>
       </Card>
