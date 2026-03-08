@@ -32,6 +32,10 @@
   opacity: 0.5;
 }
 
+.react-calendar__month-view__days {
+  min-height: 246px;
+}
+
 .react-calendar__month-view__weekdays {
   text-align: center;
   text-transform: uppercase;
