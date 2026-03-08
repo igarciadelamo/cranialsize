@@ -1,21 +1,19 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import PatientList from "@/components/patient-list"
+import AppHeader from "@/components/app-header"
 import NewPatientForm from "@/components/new-patient-form"
 import PatientDetail from "@/components/patient-detail"
-import SkullMeasurementForm from "@/components/skull-measurement-form"
+import PatientList from "@/components/patient-list"
 import Results from "@/components/results"
-import AppHeader from "@/components/app-header"
-import { usePatientStore } from "@/lib/patient-store"
+import SkullMeasurementForm from "@/components/skull-measurement-form"
 import { useAuth } from "@/lib/auth-context"
-import type { Patient, Measurement } from "@/lib/types"
-import { motion, AnimatePresence } from "framer-motion"
+import { usePatientStore } from "@/lib/patient-store"
+import type { Measurement, Patient } from "@/lib/types"
+import { AnimatePresence, motion } from "framer-motion"
+import { useNavigate } from "react-router-dom"
+import { useEffect, useState } from "react"
 
 export default function Home() {
   const { user, isLoading } = useAuth()
-  const router = useRouter()
+  const navigate = useNavigate()
   const [currentView, setCurrentView] = useState<
     "patients" | "newPatient" | "patientDetail" | "newMeasurement" | "results"
   >("patients")
@@ -25,14 +23,12 @@ export default function Home() {
   const { patients, initializeStore } = usePatientStore()
 
   useEffect(() => {
-    // Redirect to sign in if not authenticated and not loading
     if (!isLoading && !user) {
-      router.push("/auth/signin")
+      navigate("/auth/signin")
     }
-  }, [isLoading, user, router])
+  }, [isLoading, user, navigate])
 
   useEffect(() => {
-    // Initialize store with sample data if empty
     if (patients.length === 0 && user) {
       initializeStore()
     }
@@ -66,7 +62,6 @@ export default function Home() {
     setCurrentView("patientDetail")
   }
 
-  // Show loading state while checking authentication
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50 to-white">
@@ -78,10 +73,7 @@ export default function Home() {
     )
   }
 
-  // If not authenticated, don't render anything (will redirect in useEffect)
-  if (!user) {
-    return null
-  }
+  if (!user) return null
 
   const renderCurrentView = () => {
     switch (currentView) {

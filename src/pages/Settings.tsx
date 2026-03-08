@@ -1,5 +1,3 @@
-"use client"
-
 import AppHeader from "@/components/app-header"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -8,17 +6,13 @@ import { useAuth } from "@/lib/auth-context"
 import { motion } from "framer-motion"
 import { FcGoogle } from "react-icons/fc"
 
-export default function SettingsPage() {
+export default function Settings() {
   const { user } = useAuth()
 
   if (!user) return null
 
   const userInitials = user.name
-    ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
+    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase()
     : "U"
 
   return (
@@ -32,7 +26,6 @@ export default function SettingsPage() {
             transition={{ duration: 0.5 }}
           >
             <div className="space-y-6">
-              {/* Profile Section */}
               <Card className="border border-gray-100 overflow-hidden">
                 <div className="bg-teal-50/80 px-6 py-3 border-b border-teal-100/50">
                   <h2 className="text-sm font-medium text-teal-700">User</h2>
@@ -59,14 +52,15 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              {/* Plan Section */}
               <Card className="border border-gray-100 overflow-hidden">
                 <div className="bg-teal-50/80 px-6 py-3 border-b border-teal-100/50">
                   <h2 className="text-sm font-medium text-teal-700">Plan</h2>
                 </div>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">Free Plan</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {user.plan === "premium" ? "Premium Plan" : "Free Plan"}
+                    </h3>
                     <span className="flex items-center text-xs text-teal-600">
                       <span className="h-1.5 w-1.5 bg-teal-500 rounded-full mr-1"></span>
                       Active
@@ -80,4 +74,4 @@ export default function SettingsPage() {
       </div>
     </>
   )
-} 
+}

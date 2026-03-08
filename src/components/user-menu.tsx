@@ -1,5 +1,3 @@
-"use client"
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -11,17 +9,17 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
 import { LogOut, Settings } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 
 export default function UserMenu() {
   const { user, logout } = useAuth()
-  const router = useRouter()
+  const navigate = useNavigate()
   const [isSigningOut, setIsSigningOut] = useState(false)
 
   if (!user) {
     return (
-      <Button variant="outline" size="sm" onClick={() => router.push("/auth/signin")}>
+      <Button variant="outline" size="sm" onClick={() => navigate("/auth/signin")}>
         Sign In
       </Button>
     )
@@ -31,16 +29,13 @@ export default function UserMenu() {
     setIsSigningOut(true)
     setTimeout(() => {
       logout()
+      navigate("/auth/signin")
       setIsSigningOut(false)
     }, 500)
   }
 
   const userInitials = user.name
-    ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
+    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase()
     : "U"
 
   return (
@@ -61,7 +56,7 @@ export default function UserMenu() {
           </div>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/settings")}>
+        <DropdownMenuItem onClick={() => navigate("/settings")}>
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>

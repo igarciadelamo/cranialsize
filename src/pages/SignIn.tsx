@@ -1,27 +1,18 @@
-"use client"
-
+import { GoogleLogin } from "@react-oauth/google"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/lib/auth-context"
 import { motion } from "framer-motion"
-import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { FcGoogle } from "react-icons/fc"
+import { useNavigate } from "react-router-dom"
+import { useEffect } from "react"
 
 export default function SignIn() {
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const { login, user } = useAuth()
+  const navigate = useNavigate()
 
-  const handleGoogleLogin = async () => {
-    try {
-      setIsLoading(true)
-      await signIn("google", { callbackUrl: "/" })
-    } catch (error) {
-      console.error("Error signing in with Google:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  useEffect(() => {
+    if (user) navigate("/")
+  }, [user, navigate])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-white flex items-center justify-center p-4">
@@ -69,17 +60,7 @@ export default function SignIn() {
               <div className="flex space-x-4 mb-6">
                 <div className="flex items-center">
                   <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 2a10 10 0 1 0 10 10H12V2Z" />
                       <path d="M12 12 2.1 9.1a10 10 0 0 0 9.8 12.9L12 12Z" />
                       <path d="M12 12v10a10 10 0 0 0 10-10h-10Z" />
@@ -92,17 +73,7 @@ export default function SignIn() {
                 </div>
                 <div className="flex items-center">
                   <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
                       <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                     </svg>
@@ -130,19 +101,20 @@ export default function SignIn() {
             <CardContent className="pb-6 space-y-6">
               <p className="text-center text-gray-500">Access your patient records and measurement data securely.</p>
 
-              <Button
-                onClick={handleGoogleLogin}
-                disabled={isLoading}
-                variant="outline"
-                className="w-full h-12 text-base font-medium border-2 flex items-center justify-center relative overflow-hidden group"
-              >
-                <div className="absolute inset-0 w-3 bg-gradient-to-r from-teal-50 via-teal-100 to-teal-50 skew-x-[-20deg] group-hover:animate-shimmer"></div>
-                <FcGoogle className="mr-2 h-5 w-5" />
-                <span>{isLoading ? "Signing in..." : "Sign in with Google"}</span>
-                {isLoading && (
-                  <div className="absolute right-4 h-5 w-5 border-2 border-teal-600 border-r-transparent rounded-full animate-spin"></div>
-                )}
-              </Button>
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={(response) => {
+                    if (response.credential) {
+                      login(response.credential).then(() => navigate("/"))
+                    }
+                  }}
+                  onError={() => console.error("Google login failed")}
+                  theme="outline"
+                  size="large"
+                  width="320"
+                  text="signin_with"
+                />
+              </div>
 
               <div className="pt-4">
                 <p className="text-xs text-center text-gray-500">
