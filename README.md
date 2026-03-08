@@ -1,52 +1,58 @@
-# Cranial Size
+# CranialSize
 
-A modern web application built with Next.js that helps users track and analyze cranial measurements. The application provides a clean and intuitive interface for managing and visualizing cranial measurement data.
+A web application for osteopaths to track and analyze infant cranial measurements.
 
 ## Features
 
 - **Google Authentication**: Secure user authentication through Google accounts
-- **User Dashboard**: Personal space for managing your measurements and data
+- **Patient Registry**: Manage patient records and cranial measurement history
 - **Modern UI**: Clean and responsive interface built with Tailwind CSS
-- **Real-time Updates**: Instant data visualization and updates
+- **Data Visualization**: Growth charts and percentile analysis
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14 with React
-- **Styling**: Tailwind CSS
-- **Authentication**: Google OAuth
-- **UI Components**: Shadcn/ui
+- **Frontend**: Vite + React 19 + TypeScript
+- **Styling**: Tailwind CSS + Shadcn/ui
+- **Authentication**: Google OAuth via `@react-oauth/google`
 - **Animations**: Framer Motion
+- **State**: Zustand
 
 ## Getting Started
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/cranialsize.git
+git clone git@github.com:igarciadelamo/cranialsize.git
 cd cranialsize
 ```
 
 2. Install dependencies
 ```bash
 npm install
-# or
-yarn install
 ```
 
-3. Set up environment variables
-Create a `.env.local` file with the following variables:
+3. Set up environment variables — create a `.env` file:
 ```
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+VITE_API_URL=https://your-backend-url.com
 ```
 
 4. Run the development server
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Environment Variables
+
+| Variable | Description |
+|---|---|
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID from Google Cloud Console |
+| `VITE_API_URL` | Backend API base URL |
+
+## Google Cloud Console setup
+
+Add `http://localhost:3000` to **Authorized JavaScript origins** in your OAuth 2.0 Client ID for local development.
 
 ## Contributing
 
