@@ -20,7 +20,8 @@ export default function Home() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
   const [currentMeasurement, setCurrentMeasurement] = useState<Measurement | null>(null)
 
-  const { patients, initializeStore } = usePatientStore()
+  const { patients, loadPatients } = usePatientStore()
+  const { accessToken } = useAuth()
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -29,10 +30,10 @@ export default function Home() {
   }, [isLoading, user, navigate])
 
   useEffect(() => {
-    if (patients.length === 0 && user) {
-      initializeStore()
+    if (user && accessToken) {
+      loadPatients(accessToken)
     }
-  }, [patients.length, initializeStore, user])
+  }, [user, accessToken])
 
   const handlePatientSelect = (patient: Patient) => {
     setSelectedPatient(patient)
