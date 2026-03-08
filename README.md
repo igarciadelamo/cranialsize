@@ -53,3 +53,11 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## Google Cloud Console setup
 
 Add `http://localhost:3000` to **Authorized JavaScript origins** in your OAuth 2.0 Client ID for local development.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
