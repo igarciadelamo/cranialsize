@@ -17,6 +17,7 @@ import { format } from "date-fns"
 import { motion } from "framer-motion"
 import { CalendarIcon } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
 
 interface NewPatientFormProps {
   onCancel: () => void
@@ -34,7 +35,6 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
     lastName?: string
     birthDate?: string
     birthHeadCircumference?: string
-    api?: string
   }>({})
 
   const { accessToken } = useAuth()
@@ -86,7 +86,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
         addPatient(newPatient)
         onComplete(newPatient)
       } catch (e) {
-        setErrors((prev) => ({ ...prev, api: "Error saving patient. Please try again." }))
+        toast.error("Error saving patient. Please try again.")
       } finally {
         setIsSubmitting(false)
       }
@@ -193,9 +193,6 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
             </div>
           </form>
         </CardContent>
-        {errors.api && (
-          <p className="text-sm text-red-500 px-6 pb-2">{errors.api}</p>
-        )}
         <CardFooter className="flex justify-between">
           <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Cancel
