@@ -1,7 +1,7 @@
 import { differenceInMonths } from "date-fns"
 import { create } from "zustand"
 import { measurementService, patientService } from "./api-service"
-import { calculateExpectedSize } from "./skull-calculations"
+import { getPercentile } from "./skull-calculations"
 import type { Measurement, Patient } from "./types"
 
 interface PatientStore {
@@ -14,16 +14,6 @@ interface PatientStore {
   addMeasurement: (token: string, patientId: string, measurement: Measurement) => Promise<void>
 }
 
-function getPercentile(size: number, ageInMonths: number): string {
-  const expected = calculateExpectedSize(ageInMonths)
-  const difference = size - expected
-
-  if (difference > 2) return "Above 95th"
-  if (difference > 1) return "75th-95th"
-  if (difference > -1) return "25th-75th"
-  if (difference > -2) return "5th-25th"
-  return "Below 5th"
-}
 
 const MOCK_PATIENTS: Patient[] = (() => {
   const d1 = new Date()

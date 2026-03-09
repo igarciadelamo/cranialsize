@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { calculateExpectedSize, calculateEstimatedBirthSize } from "./skull-calculations"
+import { calculateExpectedSize, calculateEstimatedBirthSize, getPercentile } from "./skull-calculations"
 
 describe("calculateExpectedSize", () => {
   it("returns 35 for age 0 or negative", () => {
@@ -60,5 +60,39 @@ describe("calculateEstimatedBirthSize", () => {
   it("never returns below 30 cm", () => {
     const result = calculateEstimatedBirthSize(20, 12)
     expect(result).toBeGreaterThanOrEqual(30)
+  })
+})
+
+describe("getPercentile", () => {
+  it("returns 'Above 95th' when more than 2cm above expected", () => {
+    const age = 6
+    const expected = calculateExpectedSize(age)
+    expect(getPercentile(expected + 2.1, age)).toBe("Above 95th")
+  })
+
+  it("returns '75th-95th' when 1-2cm above expected", () => {
+    const age = 6
+    const expected = calculateExpectedSize(age)
+    expect(getPercentile(expected + 1.5, age)).toBe("75th-95th")
+  })
+
+  it("returns '25th-75th' when within 1cm of expected", () => {
+    const age = 6
+    const expected = calculateExpectedSize(age)
+    expect(getPercentile(expected, age)).toBe("25th-75th")
+    expect(getPercentile(expected + 0.5, age)).toBe("25th-75th")
+    expect(getPercentile(expected - 0.5, age)).toBe("25th-75th")
+  })
+
+  it("returns '5th-25th' when 1-2cm below expected", () => {
+    const age = 6
+    const expected = calculateExpectedSize(age)
+    expect(getPercentile(expected - 1.5, age)).toBe("5th-25th")
+  })
+
+  it("returns 'Below 5th' when more than 2cm below expected", () => {
+    const age = 6
+    const expected = calculateExpectedSize(age)
+    expect(getPercentile(expected - 2.1, age)).toBe("Below 5th")
   })
 })
