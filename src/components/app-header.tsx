@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { ChevronLeft, Home, Menu, Users, X } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 interface AppHeaderProps {
   currentView: "patients" | "newPatient" | "patientDetail" | "newMeasurement" | "results" | "settings"
@@ -13,6 +14,7 @@ interface AppHeaderProps {
 
 export default function AppHeader({ currentView, onBackToPatients }: AppHeaderProps) {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -44,7 +46,15 @@ export default function AppHeader({ currentView, onBackToPatients }: AppHeaderPr
     }
   }
 
-  const showBackButton = currentView !== "patients" && currentView !== "settings"
+  const showBackButton = currentView !== "patients"
+
+  const handleBack = () => {
+    if (currentView === "settings") {
+      navigate("/")
+    } else {
+      onBackToPatients?.()
+    }
+  }
 
   return (
     <header
@@ -57,7 +67,7 @@ export default function AppHeader({ currentView, onBackToPatients }: AppHeaderPr
         <div className="flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             {showBackButton && (
-              <Button variant="ghost" size="icon" onClick={onBackToPatients} className="mr-2">
+              <Button variant="ghost" size="icon" onClick={handleBack} className="mr-2">
                 <ChevronLeft className="h-5 w-5" />
               </Button>
             )}
