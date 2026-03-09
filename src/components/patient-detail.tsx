@@ -13,10 +13,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { calculateExpectedSize } from "@/lib/skull-calculations"
 import type { Measurement, Patient } from "@/lib/types"
 import { calculateAge, formatDate, formatDateTime } from "@/lib/utils"
+import { useAuth } from "@/lib/auth-context"
+import { usePatientStore } from "@/lib/patient-store"
 import { differenceInMonths } from "date-fns"
 import { motion } from "framer-motion"
 import { Calendar, Clock, Plus, Ruler, X } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface PatientDetailProps {
   patient: Patient
@@ -24,9 +26,18 @@ interface PatientDetailProps {
   onAddMeasurement: () => void
 }
 
-export default function PatientDetail({ patient, onBack, onAddMeasurement }: PatientDetailProps) {
+export default function PatientDetail({ patient: patientProp, onBack, onAddMeasurement }: PatientDetailProps) {
   const [selectedMeasurement, setSelectedMeasurement] = useState<Measurement | null>(null)
   const [activeTab, setActiveTab] = useState("overview")
+  const { accessToken } = useAuth()
+  const { patients, loadMeasurements } = usePatientStore()
+  const patient = patients.find((p) => p.id === patientProp.id) ?? patientProp
+
+  useEffect(() => {
+    if (accessToken) {
+      loadMeasurements(accessToken, patientProp.id)
+    }
+  }, [patientProp.id, accessToken])
 
   const handleMeasurementClick = (measurement: Measurement) => {
     setSelectedMeasurement(measurement)
