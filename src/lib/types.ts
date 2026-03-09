@@ -1,4 +1,5 @@
 export interface Measurement {
+  id?: string
   date: Date
   size: number
   percentile?: string

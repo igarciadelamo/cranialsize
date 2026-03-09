@@ -4,12 +4,14 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useAuth } from "@/lib/auth-context"
 import { usePatientStore } from "@/lib/patient-store"
 import type { Measurement, Patient } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { CalendarIcon, Ruler } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
 
 interface SkullMeasurementFormProps {
   patient: Patient
@@ -20,36 +22,38 @@ interface SkullMeasurementFormProps {
 export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: SkullMeasurementFormProps) {
   const [measurementDate, setMeasurementDate] = useState<Date>(new Date())
   const [currentSize, setCurrentSize] = useState("")
-  const [errors, setErrors] = useState<{
-    currentSize?: string
-  }>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState<{ currentSize?: string }>({})
 
+  const { accessToken } = useAuth()
   const { addMeasurement } = usePatientStore()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    const newErrors: {
-      currentSize?: string
-    } = {}
 
     const value = currentSize.trim()
     const numValue = parseFloat(value)
 
     if (!value || isNaN(numValue) || numValue <= 0 || numValue > 100) {
-      newErrors.currentSize = "Please enter a valid measurement between 0 and 100 cm"
+      setErrors({ currentSize: "Please enter a valid measurement between 0 and 100 cm" })
+      return
     }
 
-    setErrors(newErrors)
+    setErrors({})
+    setIsSubmitting(true)
 
-    if (Object.keys(newErrors).length === 0) {
+    try {
       const newMeasurement: Measurement = {
         date: measurementDate,
         size: numValue,
       }
 
-      addMeasurement(patient.id, newMeasurement)
+      await addMeasurement(accessToken!, patient.id, newMeasurement)
       onSubmit(newMeasurement)
+    } catch {
+      toast.error("Error saving measurement. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -129,15 +133,16 @@ export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: Sk
           </form>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={onCancel}>
+          <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button
             type="submit"
             form="measurement-form"
+            disabled={isSubmitting}
             className="bg-gradient-primary hover:opacity-90 transition-opacity"
           >
-            Save Measurement
+            {isSubmitting ? "Saving..." : "Save Measurement"}
           </Button>
         </CardFooter>
       </Card>

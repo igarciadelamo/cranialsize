@@ -1,6 +1,6 @@
 import { differenceInMonths } from "date-fns"
 import { create } from "zustand"
-import { patientService } from "./api-service"
+import { measurementService, patientService } from "./api-service"
 import { calculateExpectedSize } from "./skull-calculations"
 import type { Measurement, Patient } from "./types"
 
@@ -8,12 +8,12 @@ interface PatientStore {
   patients: Patient[]
   isLoading: boolean
   loadPatients: (token: string) => Promise<void>
+  loadMeasurements: (token: string, patientId: string) => Promise<void>
   addPatient: (patient: Patient) => void
   updatePatient: (id: string, patient: Partial<Patient>) => void
-  addMeasurement: (patientId: string, measurement: Measurement) => void
+  addMeasurement: (token: string, patientId: string, measurement: Measurement) => Promise<void>
 }
 
-// Helper function to determine approximate percentile
 function getPercentile(size: number, ageInMonths: number): string {
   const expected = calculateExpectedSize(ageInMonths)
   const difference = size - expected
@@ -56,6 +56,8 @@ const MOCK_PATIENTS: Patient[] = (() => {
   ]
 })()
 
+const MOCK_IDS = new Set(["1", "2"])
+
 export const usePatientStore = create<PatientStore>((set, get) => ({
   patients: [],
   isLoading: false,
@@ -80,6 +82,34 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
     }
   },
 
+  loadMeasurements: async (token: string, patientId: string) => {
+    if (MOCK_IDS.has(patientId)) return
+
+    const patient = get().patients.find((p) => p.id === patientId)
+    if (!patient || patient.measurements.length > 0) return
+
+    try {
+      const data = await measurementService.getAll(token, patientId)
+      const measurements: Measurement[] = data.map((m) => {
+        const date = new Date(m.measuredAt)
+        const ageInMonths = differenceInMonths(date, patient.birthDate)
+        return {
+          id: m.id,
+          date,
+          size: m.headCircumference,
+          percentile: getPercentile(m.headCircumference, ageInMonths),
+        }
+      })
+      set((state) => ({
+        patients: state.patients.map((p) =>
+          p.id === patientId ? { ...p, measurements } : p
+        ),
+      }))
+    } catch {
+      // Keep empty measurements on error — non-blocking
+    }
+  },
+
   addPatient: (patient) =>
     set((state) => ({
       patients: [...state.patients, patient],
@@ -90,25 +120,33 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
       patients: state.patients.map((patient) => (patient.id === id ? { ...patient, ...updatedPatient } : patient)),
     })),
 
-  addMeasurement: (patientId, measurement) =>
+  addMeasurement: async (token: string, patientId: string, measurement: Measurement) => {
+    const patient = get().patients.find((p) => p.id === patientId)
+    if (!patient) return
+
+    const ageInMonths = differenceInMonths(measurement.date, patient.birthDate)
+    const percentile = getPercentile(measurement.size, ageInMonths)
+
+    if (!MOCK_IDS.has(patientId)) {
+      const created = await measurementService.create(token, patientId, {
+        measuredAt: measurement.date.toISOString(),
+        headCircumference: measurement.size,
+      })
+      measurement = { ...measurement, id: created.id, percentile }
+    } else {
+      measurement = { ...measurement, percentile }
+    }
+
     set((state) => ({
-      patients: state.patients.map((patient) => {
-        if (patient.id === patientId) {
-          // Calculate and add percentile to the measurement
-          const ageInMonths = differenceInMonths(measurement.date, patient.birthDate)
-          const percentile = getPercentile(measurement.size, ageInMonths)
-          const measurementWithPercentile = { ...measurement, percentile }
-
-          return {
-            ...patient,
-            measurements: [...patient.measurements, measurementWithPercentile].sort(
-              (a, b) => b.date.getTime() - a.date.getTime(),
-            ),
-          }
+      patients: state.patients.map((p) => {
+        if (p.id !== patientId) return p
+        return {
+          ...p,
+          measurements: [...p.measurements, measurement].sort(
+            (a, b) => b.date.getTime() - a.date.getTime()
+          ),
         }
-        return patient
       }),
-    })),
-
-
+    }))
+  },
 }))

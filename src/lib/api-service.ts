@@ -57,6 +57,32 @@ export const patientService = {
   },
 }
 
+export interface MeasurementResponse {
+  id: string
+  patientId: string
+  measuredAt: string
+  headCircumference: number
+  createdAt: string
+}
+
+export interface CreateMeasurementPayload {
+  measuredAt: string
+  headCircumference: number
+}
+
+export const measurementService = {
+  async getAll(token: string, patientId: string): Promise<MeasurementResponse[]> {
+    return apiFetch(`/patients/${patientId}/measurements/`, token)
+  },
+
+  async create(token: string, patientId: string, payload: CreateMeasurementPayload): Promise<MeasurementResponse> {
+    return apiFetch(`/patients/${patientId}/measurements/`, token, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    })
+  },
+}
+
 export const userService = {
   async doLogin(idToken: string): Promise<UserResponse> {
     const response = await fetch(`${API_BASE_URL}/users/login`, {
