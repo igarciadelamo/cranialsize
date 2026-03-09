@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { calculateEstimatedBirthSize, calculateExpectedSize } from "@/lib/skull-calculations"
+import { calculateEstimatedBirthSize, calculateExpectedSize, getPercentile } from "@/lib/skull-calculations"
 import type { Measurement, Patient } from "@/lib/types"
 import { formatDate } from "@/lib/utils"
 import { differenceInDays, differenceInMonths } from "date-fns"
@@ -155,14 +155,3 @@ export default function Results({ patient, data, onBack }: ResultsProps) {
   )
 }
 
-// Helper function to determine approximate percentile
-function getPercentile(size: number, ageInMonths: number): string {
-  const expected = calculateExpectedSize(ageInMonths)
-  const difference = size - expected
-
-  if (difference > 2) return "Above 95th"
-  if (difference > 1) return "75th-95th"
-  if (difference > -1) return "25th-75th"
-  if (difference > -2) return "5th-25th"
-  return "Below 5th"
-}
