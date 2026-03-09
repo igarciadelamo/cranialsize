@@ -26,17 +26,18 @@ interface PatientDetailProps {
   onAddMeasurement: () => void
 }
 
-export default function PatientDetail({ patient, onBack, onAddMeasurement }: PatientDetailProps) {
+export default function PatientDetail({ patient: patientProp, onBack, onAddMeasurement }: PatientDetailProps) {
   const [selectedMeasurement, setSelectedMeasurement] = useState<Measurement | null>(null)
   const [activeTab, setActiveTab] = useState("overview")
   const { accessToken } = useAuth()
-  const { loadMeasurements } = usePatientStore()
+  const { patients, loadMeasurements } = usePatientStore()
+  const patient = patients.find((p) => p.id === patientProp.id) ?? patientProp
 
   useEffect(() => {
     if (accessToken) {
-      loadMeasurements(accessToken, patient.id)
+      loadMeasurements(accessToken, patientProp.id)
     }
-  }, [patient.id, accessToken])
+  }, [patientProp.id, accessToken])
 
   const handleMeasurementClick = (measurement: Measurement) => {
     setSelectedMeasurement(measurement)
