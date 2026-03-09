@@ -1,5 +1,3 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import UserMenu from "@/components/user-menu"
 import { useAuth } from "@/lib/auth-context"

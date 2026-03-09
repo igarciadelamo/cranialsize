@@ -1,5 +1,3 @@
-"use client"
-
 import { differenceInMonths } from "date-fns"
 import { create } from "zustand"
 import { patientService } from "./api-service"

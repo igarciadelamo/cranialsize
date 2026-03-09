@@ -1,5 +1,3 @@
-"use client"
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { calculateExpectedSize } from "@/lib/skull-calculations"
 import type { Measurement, Patient } from "@/lib/types"
