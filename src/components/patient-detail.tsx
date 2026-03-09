@@ -30,7 +30,7 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
   const [selectedMeasurement, setSelectedMeasurement] = useState<Measurement | null>(null)
   const [activeTab, setActiveTab] = useState("overview")
   const { accessToken } = useAuth()
-  const { patients, loadMeasurements } = usePatientStore()
+  const { patients, loadMeasurements, isMeasurementsLoading } = usePatientStore()
   const patient = patients.find((p) => p.id === patientProp.id) ?? patientProp
 
   useEffect(() => {
@@ -96,10 +96,27 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                 <TabsTrigger value="measurements">Measurement History</TabsTrigger>
               </TabsList>
               <TabsContent value="overview" className="space-y-4">
-                <PatientGrowthChart patient={patient} />
+                {isMeasurementsLoading ? (
+                  <div className="flex items-center justify-center h-[350px]">
+                    <div className="h-8 w-8 border-4 border-t-teal-600 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  <PatientGrowthChart patient={patient} />
+                )}
               </TabsContent>
               <TabsContent value="measurements" className="space-y-4">
-                {patient.measurements.length > 0 ? (
+                {isMeasurementsLoading ? (
+                  <div className="space-y-2 animate-pulse">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="grid grid-cols-12 p-4 border rounded-xl">
+                        <div className="col-span-3"><div className="h-4 w-24 bg-gray-200 rounded" /></div>
+                        <div className="col-span-3"><div className="h-4 w-20 bg-gray-200 rounded" /></div>
+                        <div className="col-span-3"><div className="h-4 w-16 bg-gray-200 rounded" /></div>
+                        <div className="col-span-3"><div className="h-4 w-20 bg-gray-200 rounded" /></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : patient.measurements.length > 0 ? (
                   <div className="border rounded-xl overflow-hidden shadow-sm">
                     <div className="grid grid-cols-12 bg-gray-50 p-4 text-sm font-medium text-gray-500 border-b">
                       <div className="col-span-3">Date</div>
@@ -147,6 +164,7 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                 )}
               </TabsContent>
             </Tabs>
+
           </CardContent>
           <CardFooter>
             <Button variant="outline" onClick={onBack} className="w-full">

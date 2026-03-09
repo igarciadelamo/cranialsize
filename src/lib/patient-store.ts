@@ -7,6 +7,7 @@ import type { Measurement, Patient } from "./types"
 interface PatientStore {
   patients: Patient[]
   isLoading: boolean
+  isMeasurementsLoading: boolean
   loadPatients: (token: string) => Promise<void>
   loadMeasurements: (token: string, patientId: string) => Promise<void>
   addPatient: (patient: Patient) => void
@@ -51,6 +52,7 @@ const MOCK_IDS = new Set(["1", "2"])
 export const usePatientStore = create<PatientStore>((set, get) => ({
   patients: [],
   isLoading: false,
+  isMeasurementsLoading: false,
 
   loadPatients: async (token: string) => {
     set({ isLoading: true })
@@ -78,6 +80,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
     const patient = get().patients.find((p) => p.id === patientId)
     if (!patient || patient.measurements.length > 0) return
 
+    set({ isMeasurementsLoading: true })
     try {
       const data = await measurementService.getAll(token, patientId)
       const measurements: Measurement[] = data.map((m) => {
@@ -97,6 +100,8 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
       }))
     } catch {
       // Keep empty measurements on error — non-blocking
+    } finally {
+      set({ isMeasurementsLoading: false })
     }
   },
 
