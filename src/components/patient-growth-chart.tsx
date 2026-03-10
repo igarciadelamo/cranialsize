@@ -53,7 +53,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
       : 0
     const maxAge = Math.max(lastMeasurementAge, patientAgeNow) + 2
     const clampedMaxAge = Math.max(maxAge, 6)
-    const tickCount = Math.ceil(clampedMaxAge / 3)
+    const tickCount = Math.min(clampedMaxAge + 1, 8)
 
     for (let month = 0; month <= clampedMaxAge; month++) {
       referenceData.push({
