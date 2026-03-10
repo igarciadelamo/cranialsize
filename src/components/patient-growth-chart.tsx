@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { calculateExpectedSize } from "@/lib/skull-calculations"
 import type { Measurement, Patient } from "@/lib/types"
 import { differenceInMonths, format } from "date-fns"
-import { useMemo } from "react"
+import { useMemo, type FC } from "react"
 import {
   Area,
   CartesianGrid,
@@ -17,6 +17,35 @@ import {
 
 interface PatientGrowthChartProps {
   patient: Patient
+}
+
+const CustomTooltip: FC<any> = ({ active, payload }) => {
+  if (!active || !payload || !payload[0]?.payload) return null
+
+  const data = payload[0].payload
+
+  return (
+    <div className="bg-white p-3 shadow-lg rounded-lg border border-gray-100">
+      <div className="space-y-2">
+        <div className="flex flex-col">
+          <span className="text-[0.70rem] uppercase text-gray-500">Age</span>
+          <span className="font-bold text-gray-700">
+            {data?.ageInMonths} {data?.ageInMonths === 1 ? "month" : "months"}
+          </span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-[0.70rem] uppercase text-gray-500">Size</span>
+          <span className="font-bold text-gray-700">{data?.size?.toFixed(1) ?? "N/A"} cm</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-[0.70rem] uppercase text-gray-500">Date</span>
+          <span className="font-bold text-gray-700">
+            {data?.date ?? "N/A"}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function PatientGrowthChart({ patient }: PatientGrowthChartProps) {
@@ -96,36 +125,6 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
           </div>
         </CardContent>
       </Card>
-    )
-  }
-
-  // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload || !payload[0]?.payload) return null
-
-    const data = payload[0].payload
-
-    return (
-      <div className="bg-white p-3 shadow-lg rounded-lg border border-gray-100">
-        <div className="space-y-2">
-          <div className="flex flex-col">
-            <span className="text-[0.70rem] uppercase text-gray-500">Age</span>
-            <span className="font-bold text-gray-700">
-              {data?.ageInMonths} {data?.ageInMonths === 1 ? "month" : "months"}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[0.70rem] uppercase text-gray-500">Size</span>
-            <span className="font-bold text-gray-700">{data?.size?.toFixed(1) ?? 'N/A'} cm</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[0.70rem] uppercase text-gray-500">Date</span>
-            <span className="font-bold text-gray-700">
-              {data?.date ? format(new Date(data.date), 'MMM d, yyyy') : 'N/A'}
-            </span>
-          </div>
-        </div>
-      </div>
     )
   }
 
