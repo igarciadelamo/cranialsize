@@ -142,7 +142,7 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                           </div>
                           <div className="col-span-3 text-gray-600">
                             <span className="pill-badge pill-badge-primary">
-                              {measurement.percentile || "25th-75th"}
+                              {measurement.percentile ?? "—"}
                             </span>
                           </div>
                         </div>
@@ -217,7 +217,7 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                     <p className="text-xs text-gray-500">Percentile</p>
                     <p className="text-sm font-medium">
                       <span className="pill-badge pill-badge-primary">
-                        {selectedMeasurement.percentile || "25th-75th"}
+                        {selectedMeasurement.percentile ?? "—"}
                       </span>
                     </p>
                   </div>
