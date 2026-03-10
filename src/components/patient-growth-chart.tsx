@@ -20,7 +20,7 @@ interface PatientGrowthChartProps {
 }
 
 export default function PatientGrowthChart({ patient }: PatientGrowthChartProps) {
-  const chartData = useMemo(() => {
+  const { patientData, referenceData, clampedMaxAge, ticks } = useMemo(() => {
     // Sort measurements by date (oldest first)
     const sortedMeasurements = [...patient.measurements].sort((a, b) => a.date.getTime() - b.date.getTime())
 
@@ -47,16 +47,22 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
 
     // Generate reference line data (50th percentile)
     const referenceData = []
-    const maxAge = Math.max(...measurementsWithAge.map((m) => m.ageInMonths), 12) // At least show first year
+    const patientAgeNow = differenceInMonths(new Date(), patient.birthDate)
+    const lastMeasurementAge = measurementsWithAge.length > 0
+      ? Math.max(...measurementsWithAge.map((m) => m.ageInMonths))
+      : 0
+    const maxAge = Math.max(lastMeasurementAge, patientAgeNow) + 2
+    const clampedMaxAge = Math.max(maxAge, 6)
+    const ticks = Array.from({ length: clampedMaxAge + 1 }, (_, i) => i)
 
-    for (let month = 0; month <= maxAge; month++) {
+    for (let month = 0; month <= clampedMaxAge; month++) {
       referenceData.push({
         ageInMonths: month,
         expectedSize: calculateExpectedSize(month),
       })
     }
 
-    return { patientData: dataWithBirth, referenceData }
+    return { patientData: dataWithBirth, referenceData, clampedMaxAge, ticks }
   }, [patient])
 
   // If no measurements, show a message
@@ -129,7 +135,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
         <CardTitle className="text-lg font-semibold text-gray-800">Growth Chart</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[350px] w-full">
+        <div className="h-[250px] md:h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
               <defs>
@@ -142,8 +148,8 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
               <XAxis
                 dataKey="ageInMonths"
                 type="number"
-                domain={[0, "dataMax + 1"]}
-                tickCount={6}
+                domain={[0, clampedMaxAge]}
+                ticks={ticks}
                 label={{ 
                   value: "Age (months)", 
                   position: "bottom", 
@@ -177,7 +183,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
 
               {/* Expected size reference line */}
               <Line
-                data={chartData.referenceData}
+                data={referenceData}
                 type="monotone"
                 dataKey="expectedSize"
                 stroke="#94a3b8"
@@ -188,7 +194,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
 
               {/* Patient's actual measurements */}
               <Line
-                data={chartData.patientData}
+                data={patientData}
                 type="monotone"
                 dataKey="size"
                 stroke="#14b8a6"
@@ -198,7 +204,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
                 dot={{ stroke: "#0d9488", strokeWidth: 2, r: 4, fill: "#fff" }}
               />
               <Area
-                data={chartData.patientData}
+                data={patientData}
                 type="monotone"
                 dataKey="size"
                 stroke="none"
@@ -219,20 +225,20 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
                 </div>
                 <div className="border-l border-gray-200 pl-4">
                   <p className="text-sm font-medium text-gray-700">Birth Size (Estimated)</p>
-                  <p className="text-lg font-semibold text-gray-800">{chartData.patientData[0].size.toFixed(1)} cm</p>
+                  <p className="text-lg font-semibold text-gray-800">{patientData[0].size.toFixed(1)} cm</p>
                 </div>
               </div>
             ) : (
               <>
                 <p className="text-sm font-medium text-gray-700">Birth Size (Estimated)</p>
-                <p className="text-lg font-semibold text-gray-800">{chartData.patientData[0].size.toFixed(1)} cm</p>
+                <p className="text-lg font-semibold text-gray-800">{patientData[0].size.toFixed(1)} cm</p>
               </>
             )}
           </div>
           <div className="bg-gradient-secondary p-3 rounded-lg">
             <p className="text-sm font-medium text-gray-700">Current Size</p>
             <p className="text-lg font-semibold text-gray-800">
-              {chartData.patientData[chartData.patientData.length - 1].size.toFixed(1)} cm
+              {patientData[patientData.length - 1].size.toFixed(1)} cm
             </p>
           </div>
         </div>
