@@ -20,7 +20,7 @@ interface PatientGrowthChartProps {
 }
 
 export default function PatientGrowthChart({ patient }: PatientGrowthChartProps) {
-  const { patientData, referenceData, clampedMaxAge, tickCount } = useMemo(() => {
+  const { patientData, referenceData, clampedMaxAge, ticks } = useMemo(() => {
     // Sort measurements by date (oldest first)
     const sortedMeasurements = [...patient.measurements].sort((a, b) => a.date.getTime() - b.date.getTime())
 
@@ -53,7 +53,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
       : 0
     const maxAge = Math.max(lastMeasurementAge, patientAgeNow) + 2
     const clampedMaxAge = Math.max(maxAge, 6)
-    const tickCount = Math.min(clampedMaxAge + 1, 8)
+    const ticks = Array.from({ length: clampedMaxAge + 1 }, (_, i) => i)
 
     for (let month = 0; month <= clampedMaxAge; month++) {
       referenceData.push({
@@ -62,7 +62,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
       })
     }
 
-    return { patientData: dataWithBirth, referenceData, clampedMaxAge, tickCount }
+    return { patientData: dataWithBirth, referenceData, clampedMaxAge, ticks }
   }, [patient])
 
   // If no measurements, show a message
@@ -149,7 +149,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
                 dataKey="ageInMonths"
                 type="number"
                 domain={[0, clampedMaxAge]}
-                tickCount={tickCount}
+                ticks={ticks}
                 label={{ 
                   value: "Age (months)", 
                   position: "bottom", 
