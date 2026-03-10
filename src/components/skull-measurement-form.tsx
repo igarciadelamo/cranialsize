@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { HC_GENERAL_MIN, HC_GENERAL_MAX } from "@/lib/constants"
 import { useAuth } from "@/lib/auth-context"
 import { usePatientStore } from "@/lib/patient-store"
 import type { Measurement, Patient } from "@/lib/types"
@@ -34,8 +35,8 @@ export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: Sk
     const value = currentSize.trim()
     const numValue = parseFloat(value)
 
-    if (!value || isNaN(numValue) || numValue <= 0 || numValue > 100) {
-      setErrors({ currentSize: "Please enter a valid measurement between 0 and 100 cm" })
+    if (!value || isNaN(numValue) || numValue <= HC_GENERAL_MIN || numValue > HC_GENERAL_MAX) {
+      setErrors({ currentSize: `Please enter a valid measurement between ${HC_GENERAL_MIN} and ${HC_GENERAL_MAX} cm` })
       return
     }
 
@@ -108,7 +109,7 @@ export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: Sk
                     const value = e.target.value;
                     if (value === "" || /^\d*\.?\d*$/.test(value)) {
                       const numValue = value === "" ? 0 : parseFloat(value);
-                      if (value === "" || (numValue >= 0 && numValue <= 100)) {
+                      if (value === "" || (numValue >= HC_GENERAL_MIN && numValue <= HC_GENERAL_MAX)) {
                         setCurrentSize(value);
                         setErrors({});
                       }

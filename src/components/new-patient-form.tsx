@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth-context"
 import { patientService } from "@/lib/api-service"
 import { usePatientStore } from "@/lib/patient-store"
 import type { Patient } from "@/lib/types"
+import { HC_BIRTH_MIN, HC_BIRTH_MAX } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { motion } from "framer-motion"
@@ -148,10 +149,10 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
                       setErrors(prev => ({ ...prev, birthHeadCircumference: undefined }));
                     } else {
                       const numValue = parseFloat(value);
-                      if (numValue >= 20 && numValue <= 50) {
+                      if (numValue >= HC_BIRTH_MIN && numValue <= HC_BIRTH_MAX) {
                         setErrors(prev => ({ ...prev, birthHeadCircumference: undefined }));
                       } else {
-                        setErrors(prev => ({ ...prev, birthHeadCircumference: "Please enter a valid measurement between 20 and 50 cm" }));
+                        setErrors(prev => ({ ...prev, birthHeadCircumference: `Please enter a valid measurement between ${HC_BIRTH_MIN} and ${HC_BIRTH_MAX} cm` }));
                       }
                     }
                   }
