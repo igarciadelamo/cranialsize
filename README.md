@@ -1,5 +1,7 @@
 # CranialSize
 
+[![codecov](https://codecov.io/gh/igarciadelamo/cranialsize/branch/main/graph/badge.svg)](https://codecov.io/gh/igarciadelamo/cranialsize)
+
 A web application for osteopaths to track and analyze infant cranial measurements.
 
 ## Features
