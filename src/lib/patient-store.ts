@@ -70,7 +70,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
       set({ patients: [...MOCK_PATIENTS, ...apiPatients] })
     } catch {
       set({ patients: MOCK_PATIENTS })
-      toast.error("Could not load patients. Please check your connection and try again.")
+      toast.error("Oops! Something went wrong loading your patients. This might be temporary, please try again later.")
     } finally {
       set({ isLoading: false })
     }
@@ -101,7 +101,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
         ),
       }))
     } catch {
-      toast.error("Could not load measurements. Please try again.")
+      toast.error("Oops! Something went wrong loading the measurements. This might be temporary, please try again later.")
     } finally {
       set({ isMeasurementsLoading: false })
     }
