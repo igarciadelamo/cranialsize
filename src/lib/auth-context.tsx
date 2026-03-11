@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from "
 import { userService, type UserResponse } from "./api-service"
 
 export interface User {
-  id: string
   name: string
   email: string
   image: string
@@ -57,7 +56,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data: UserResponse = await userService.doLogin(idToken)
 
     const userData: User = {
-      id: data.id,
       name: data.name,
       email: data.email,
       image: data.picture,
