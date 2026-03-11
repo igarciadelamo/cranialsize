@@ -1,4 +1,5 @@
 import { differenceInMonths } from "date-fns"
+import { toast } from "sonner"
 import { create } from "zustand"
 import { measurementService, patientService } from "./api-service"
 import { getPercentile } from "./skull-calculations"
@@ -69,6 +70,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
       set({ patients: [...MOCK_PATIENTS, ...apiPatients] })
     } catch {
       set({ patients: MOCK_PATIENTS })
+      toast.error("Oops! Something went wrong loading your patients. This might be temporary, please try again later.")
     } finally {
       set({ isLoading: false })
     }
@@ -99,7 +101,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
         ),
       }))
     } catch {
-      // Keep empty measurements on error — non-blocking
+      toast.error("Oops! Something went wrong loading the measurements. This might be temporary, please try again later.")
     } finally {
       set({ isMeasurementsLoading: false })
     }
