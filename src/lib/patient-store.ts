@@ -34,6 +34,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
         birthDate: new Date(p.birthDate),
         birthHeadCircumference: p.birthHeadCircumference ?? undefined,
         measurements: [],
+        measurementCount: p.measurementCount,
       }))
       set({ patients: apiPatients })
     } catch {
@@ -104,6 +105,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
           measurements: [...p.measurements, measurement].sort(
             (a, b) => b.date.getTime() - a.date.getTime()
           ),
+          measurementCount: (p.measurementCount ?? p.measurements.length) + 1,
         }
       }),
     }))

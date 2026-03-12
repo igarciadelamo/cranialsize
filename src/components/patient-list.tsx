@@ -180,7 +180,8 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
                     </div>
                     <div className="col-span-2 text-gray-600 flex items-center">
                       <span className="pill-badge pill-badge-primary">
-                        {patient.measurements.length} {patient.measurements.length === 1 ? "record" : "records"}
+                        {patient.measurementCount ?? patient.measurements.length}{" "}
+                        {(patient.measurementCount ?? patient.measurements.length) === 1 ? "record" : "records"}
                       </span>
                     </div>
                   </motion.div>

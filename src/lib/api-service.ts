@@ -16,6 +16,7 @@ export interface PatientResponse {
   birthDate: string
   birthHeadCircumference: number | null
   createdAt: string
+  measurementCount: number
 }
 
 export interface CreatePatientPayload {

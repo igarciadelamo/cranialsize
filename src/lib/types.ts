@@ -13,4 +13,5 @@ export interface Patient {
   birthDate: Date
   birthHeadCircumference?: number // Optional head circumference at birth
   measurements: Measurement[]
+  measurementCount?: number
 }
