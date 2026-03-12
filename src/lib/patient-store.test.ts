@@ -40,7 +40,7 @@ describe("loadPatients", () => {
     expect(patients.find((p) => p.id === "real-1")?.firstName).toBe("John")
   })
 
-  it("shows toast and falls back to mock patients on error", async () => {
+  it("shows toast and sets empty list on error", async () => {
     const { patientService } = await import("./api-service")
     const { toast } = await import("sonner")
     vi.mocked(patientService.getAll).mockRejectedValueOnce(new Error("Network error"))
@@ -50,8 +50,7 @@ describe("loadPatients", () => {
     })
 
     expect(toast.error).toHaveBeenCalledOnce()
-    const patients = usePatientStore.getState().patients
-    expect(patients.some((p) => p.firstName === "Emma")).toBe(true)
+    expect(usePatientStore.getState().patients).toHaveLength(0)
   })
 
   it("sets isLoading to false after loading", async () => {
@@ -67,19 +66,6 @@ describe("loadPatients", () => {
 })
 
 describe("loadMeasurements", () => {
-  it("skips mock patients without calling the API", async () => {
-    const { measurementService } = await import("./api-service")
-    usePatientStore.setState({
-      patients: [{ id: "1", firstName: "Emma", lastName: "Johnson", birthDate: new Date(), measurements: [] }],
-    })
-
-    await act(async () => {
-      await usePatientStore.getState().loadMeasurements("token", "1")
-    })
-
-    expect(measurementService.getAll).not.toHaveBeenCalled()
-  })
-
   it("reloads measurements even when patient already has measurements", async () => {
     const { measurementService } = await import("./api-service")
     const birthDate = new Date("2024-01-01")
@@ -174,22 +160,6 @@ describe("addPatient", () => {
 })
 
 describe("addMeasurement", () => {
-  it("adds measurement to mock patient without calling the API", async () => {
-    const { measurementService } = await import("./api-service")
-    const birthDate = new Date("2024-01-01")
-    usePatientStore.setState({
-      patients: [{ id: "1", firstName: "Emma", lastName: "Johnson", birthDate, measurements: [] }],
-    })
-
-    await act(async () => {
-      await usePatientStore.getState().addMeasurement("token", "1", { date: new Date("2024-07-01"), size: 42 })
-    })
-
-    expect(measurementService.create).not.toHaveBeenCalled()
-    const patient = usePatientStore.getState().patients.find((p) => p.id === "1")
-    expect(patient?.measurements).toHaveLength(1)
-  })
-
   it("does nothing when patient is not found", async () => {
     const { measurementService } = await import("./api-service")
 
@@ -201,18 +171,27 @@ describe("addMeasurement", () => {
   })
 
   it("sorts measurements by date descending after adding", async () => {
+    const { measurementService } = await import("./api-service")
+    vi.mocked(measurementService.create).mockResolvedValueOnce({
+      id: "m-sort",
+      patientId: "real-1",
+      measuredAt: "2024-03-01T00:00:00.000Z",
+      headCircumference: 41,
+      createdAt: "",
+    })
+
     const birthDate = new Date("2024-01-01")
     const newerDate = new Date("2024-07-01")
     const olderDate = new Date("2024-03-01")
     usePatientStore.setState({
-      patients: [{ id: "1", firstName: "Emma", lastName: "Johnson", birthDate, measurements: [{ date: newerDate, size: 43 }] }],
+      patients: [{ id: "real-1", firstName: "John", lastName: "Doe", birthDate, measurements: [{ date: newerDate, size: 43 }] }],
     })
 
     await act(async () => {
-      await usePatientStore.getState().addMeasurement("token", "1", { date: olderDate, size: 41 })
+      await usePatientStore.getState().addMeasurement("token", "real-1", { date: olderDate, size: 41 })
     })
 
-    const patient = usePatientStore.getState().patients.find((p) => p.id === "1")
+    const patient = usePatientStore.getState().patients.find((p) => p.id === "real-1")
     expect(patient?.measurements[0].date.getTime()).toBe(newerDate.getTime())
     expect(patient?.measurements[1].date.getTime()).toBe(olderDate.getTime())
   })

@@ -17,38 +17,6 @@ interface PatientStore {
 }
 
 
-const MOCK_PATIENTS: Patient[] = (() => {
-  const d1 = new Date()
-  d1.setMonth(d1.getMonth() - 6)
-  const d2 = new Date()
-  d2.setMonth(d2.getMonth() - 12)
-  return [
-    {
-      id: "1",
-      firstName: "Emma",
-      lastName: "Johnson",
-      birthDate: d1,
-      birthHeadCircumference: 35.2,
-      measurements: [
-        { date: new Date(d1.getTime() + 30 * 24 * 60 * 60 * 1000), size: 38.2, percentile: "25th-75th" },
-        { date: new Date(d1.getTime() + 90 * 24 * 60 * 60 * 1000), size: 41.5, percentile: "75th-95th" },
-      ],
-    },
-    {
-      id: "2",
-      firstName: "Noah",
-      lastName: "Williams",
-      birthDate: d2,
-      measurements: [
-        { date: new Date(d2.getTime() + 60 * 24 * 60 * 60 * 1000), size: 39.8, percentile: "25th-75th" },
-        { date: new Date(d2.getTime() + 180 * 24 * 60 * 60 * 1000), size: 44.2, percentile: "25th-75th" },
-        { date: new Date(d2.getTime() + 300 * 24 * 60 * 60 * 1000), size: 46.5, percentile: "25th-75th" },
-      ],
-    },
-  ]
-})()
-
-const MOCK_IDS = new Set(["1", "2"])
 
 export const usePatientStore = create<PatientStore>((set, get) => ({
   patients: [],
@@ -67,9 +35,9 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
         birthHeadCircumference: p.birthHeadCircumference ?? undefined,
         measurements: [],
       }))
-      set({ patients: [...MOCK_PATIENTS, ...apiPatients] })
+      set({ patients: apiPatients })
     } catch {
-      set({ patients: MOCK_PATIENTS })
+      set({ patients: [] })
       toast.error("Oops! Something went wrong loading your patients. This might be temporary, please try again later.")
     } finally {
       set({ isLoading: false })
@@ -77,8 +45,6 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
   },
 
   loadMeasurements: async (token: string, patientId: string) => {
-    if (MOCK_IDS.has(patientId)) return
-
     const patient = get().patients.find((p) => p.id === patientId)
     if (!patient) return
 
@@ -124,15 +90,11 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
     const ageInMonths = differenceInMonths(measurement.date, patient.birthDate)
     const percentile = getPercentile(measurement.size, ageInMonths)
 
-    if (!MOCK_IDS.has(patientId)) {
-      const created = await measurementService.create(token, patientId, {
-        measuredAt: measurement.date.toISOString(),
-        headCircumference: measurement.size,
-      })
-      measurement = { ...measurement, id: created.id, percentile }
-    } else {
-      measurement = { ...measurement, percentile }
-    }
+    const created = await measurementService.create(token, patientId, {
+      measuredAt: measurement.date.toISOString(),
+      headCircumference: measurement.size,
+    })
+    measurement = { ...measurement, id: created.id, percentile }
 
     set((state) => ({
       patients: state.patients.map((p) => {
