@@ -88,4 +88,33 @@ describe("PatientList", () => {
     expect(screen.getByText(/1 record/i)).toBeInTheDocument()
     expect(screen.getByText(/0 records/i)).toBeInTheDocument()
   })
+
+  it("switches active sort column when a different header is clicked", async () => {
+    renderList()
+    await userEvent.click(screen.getByText("Age"))
+    // ArrowUpDown should now be in the Age header, not in Patient Name
+    const ageHeader = screen.getByText("Age").closest("div")!
+    expect(ageHeader.querySelector("svg")).toBeInTheDocument()
+  })
+
+  it("switches sort to records column when Records header is clicked", async () => {
+    renderList()
+    await userEvent.click(screen.getByText("Records"))
+    const recordsHeader = screen.getByText("Records").closest("div")!
+    expect(recordsHeader.querySelector("svg")).toBeInTheDocument()
+  })
+
+  it("toggles sort direction when the active column header is clicked again", async () => {
+    renderList()
+    // Default: name asc → Emma before Noah
+    const emmaBefore = screen.getByText(/emma johnson/i)
+    const noahBefore = screen.getByText(/noah williams/i)
+    expect(emmaBefore.compareDocumentPosition(noahBefore) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    await userEvent.click(screen.getByText("Patient Name"))
+    // name desc → Noah before Emma
+    const emmaAfter = screen.getByText(/emma johnson/i)
+    const noahAfter = screen.getByText(/noah williams/i)
+    expect(noahAfter.compareDocumentPosition(emmaAfter) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
 })

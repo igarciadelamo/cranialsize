@@ -145,6 +145,22 @@ describe("loadMeasurements", () => {
   })
 })
 
+describe("updatePatient", () => {
+  it("updates fields of an existing patient", () => {
+    usePatientStore.setState({
+      patients: [{ id: "p1", firstName: "Old", lastName: "Name", birthDate: new Date(), measurements: [] }],
+    })
+
+    act(() => {
+      usePatientStore.getState().updatePatient("p1", { firstName: "New" })
+    })
+
+    const patient = usePatientStore.getState().patients.find((p) => p.id === "p1")
+    expect(patient?.firstName).toBe("New")
+    expect(patient?.lastName).toBe("Name")
+  })
+})
+
 describe("addPatient", () => {
   it("adds a patient to the store", () => {
     const newPatient = { id: "new-1", firstName: "Test", lastName: "User", birthDate: new Date(), measurements: [] }
@@ -172,6 +188,33 @@ describe("addMeasurement", () => {
     expect(measurementService.create).not.toHaveBeenCalled()
     const patient = usePatientStore.getState().patients.find((p) => p.id === "1")
     expect(patient?.measurements).toHaveLength(1)
+  })
+
+  it("does nothing when patient is not found", async () => {
+    const { measurementService } = await import("./api-service")
+
+    await act(async () => {
+      await usePatientStore.getState().addMeasurement("token", "nonexistent", { date: new Date(), size: 42 })
+    })
+
+    expect(measurementService.create).not.toHaveBeenCalled()
+  })
+
+  it("sorts measurements by date descending after adding", async () => {
+    const birthDate = new Date("2024-01-01")
+    const newerDate = new Date("2024-07-01")
+    const olderDate = new Date("2024-03-01")
+    usePatientStore.setState({
+      patients: [{ id: "1", firstName: "Emma", lastName: "Johnson", birthDate, measurements: [{ date: newerDate, size: 43 }] }],
+    })
+
+    await act(async () => {
+      await usePatientStore.getState().addMeasurement("token", "1", { date: olderDate, size: 41 })
+    })
+
+    const patient = usePatientStore.getState().patients.find((p) => p.id === "1")
+    expect(patient?.measurements[0].date.getTime()).toBe(newerDate.getTime())
+    expect(patient?.measurements[1].date.getTime()).toBe(olderDate.getTime())
   })
 
   it("calls API for real patient and stores the returned id", async () => {
