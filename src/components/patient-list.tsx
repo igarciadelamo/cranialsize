@@ -171,7 +171,6 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
                         <div className="font-semibold">
                           {patient.firstName} {patient.lastName}
                         </div>
-                        <div className="text-xs text-gray-500">{patient.id}</div>
                       </div>
                     </div>
                     <div className="col-span-2 text-gray-600 flex items-center">{calculateAge(patient.birthDate)}</div>
