@@ -80,25 +80,33 @@ describe("loadMeasurements", () => {
     expect(measurementService.getAll).not.toHaveBeenCalled()
   })
 
-  it("skips patients that already have measurements", async () => {
+  it("reloads measurements even when patient already has measurements", async () => {
     const { measurementService } = await import("./api-service")
+    const birthDate = new Date("2024-01-01")
     usePatientStore.setState({
       patients: [
         {
           id: "real-1",
           firstName: "John",
           lastName: "Doe",
-          birthDate: new Date(),
+          birthDate,
           measurements: [{ date: new Date(), size: 42 }],
         },
       ],
     })
 
+    vi.mocked(measurementService.getAll).mockResolvedValueOnce([
+      { id: "m1", patientId: "real-1", measuredAt: "2024-07-01T00:00:00.000Z", headCircumference: 43.0, createdAt: "" },
+    ])
+
     await act(async () => {
       await usePatientStore.getState().loadMeasurements("token", "real-1")
     })
 
-    expect(measurementService.getAll).not.toHaveBeenCalled()
+    expect(measurementService.getAll).toHaveBeenCalledWith("token", "real-1")
+    const patient = usePatientStore.getState().patients.find((p) => p.id === "real-1")
+    expect(patient?.measurements).toHaveLength(1)
+    expect(patient?.measurements[0].size).toBe(43.0)
   })
 
   it("loads and maps measurements for real patients", async () => {

@@ -58,7 +58,6 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                 <CardTitle className="text-2xl font-bold text-gray-800">
                   {patient.firstName} {patient.lastName}
                 </CardTitle>
-                <p className="text-gray-500 mt-1">Patient ID: {patient.id}</p>
               </div>
               <Button
                 onClick={onAddMeasurement}
@@ -185,7 +184,10 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
             </DialogDescription>
           </DialogHeader>
 
-          {selectedMeasurement && (
+          {selectedMeasurement && (() => {
+            const ageMonths = differenceInMonths(selectedMeasurement.date, patient.birthDate)
+            const expectedSize = calculateExpectedSize(ageMonths)
+            return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gradient-secondary p-3 rounded-lg">
@@ -233,35 +235,25 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Expected Size (50th percentile):</span>
-                    <span className="font-medium">
-                      {calculateExpectedSize(differenceInMonths(selectedMeasurement.date, patient.birthDate)).toFixed(
-                        1,
-                      )}{" "}
-                      cm
-                    </span>
+                    <span className="font-medium">{expectedSize.toFixed(1)} cm</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Difference from Expected:</span>
                     <span
                       className={
-                        selectedMeasurement.size -
-                          calculateExpectedSize(differenceInMonths(selectedMeasurement.date, patient.birthDate)) >=
-                        0
+                        selectedMeasurement.size - expectedSize >= 0
                           ? "font-medium text-green-600"
                           : "font-medium text-amber-600"
                       }
                     >
-                      {(
-                        selectedMeasurement.size -
-                        calculateExpectedSize(differenceInMonths(selectedMeasurement.date, patient.birthDate))
-                      ).toFixed(1)}{" "}
-                      cm
+                      {(selectedMeasurement.size - expectedSize).toFixed(1)} cm
                     </span>
                   </div>
                 </div>
               </div>
             </div>
-          )}
+            )
+          })()}
 
           <DialogFooter className="sm:justify-center">
             <Button variant="outline" onClick={handleCloseDialog}>

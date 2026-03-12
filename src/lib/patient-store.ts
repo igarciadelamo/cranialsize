@@ -80,7 +80,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
     if (MOCK_IDS.has(patientId)) return
 
     const patient = get().patients.find((p) => p.id === patientId)
-    if (!patient || patient.measurements.length > 0) return
+    if (!patient) return
 
     set({ isMeasurementsLoading: true })
     try {
