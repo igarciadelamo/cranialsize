@@ -127,7 +127,7 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                     <div className="divide-y">
                       {patient.measurements.map((measurement, index) => (
                         <div
-                          key={index}
+                          key={measurement.id ?? index}
                           className="grid grid-cols-12 p-4 hover:bg-gray-50 cursor-pointer transition-colors"
                           onClick={() => handleMeasurementClick(measurement)}
                         >

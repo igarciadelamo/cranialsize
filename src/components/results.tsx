@@ -24,10 +24,7 @@ export default function Results({ patient, data, onBack }: ResultsProps) {
   const estimatedBirthSize = calculateEstimatedBirthSize(currentSize, ageInMonths)
 
   const sizeDifference = currentSize - expectedSize
-  const percentile = getPercentile(currentSize, ageInMonths)
-
-  // Save percentile to the measurement
-  data.percentile = percentile
+  const percentile = data.percentile ?? getPercentile(currentSize, ageInMonths)
 
   return (
     <motion.div

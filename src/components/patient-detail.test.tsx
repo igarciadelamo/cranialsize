@@ -114,4 +114,22 @@ describe("PatientDetail", () => {
     await userEvent.click(screen.getByText(/42\.5 cm/i))
     expect(screen.getByText(/measurement details/i)).toBeInTheDocument()
   })
+
+  it("closes measurement detail dialog when close button is clicked", async () => {
+    const patientWithMeasurements = {
+      ...mockPatient,
+      measurements: [{ id: "m1", date: new Date("2024-07-01"), size: 42.5, percentile: "25th-75th" }],
+    }
+    mockUsePatientStore.mockReturnValue({
+      patients: [patientWithMeasurements],
+      loadMeasurements: mockLoadMeasurements,
+      isMeasurementsLoading: false,
+    })
+    renderDetail(patientWithMeasurements)
+    await userEvent.click(screen.getByRole("tab", { name: /measurement history/i }))
+    await userEvent.click(screen.getByText(/42\.5 cm/i))
+    const closeButtons = screen.getAllByRole("button", { name: /close/i })
+    await userEvent.click(closeButtons[closeButtons.length - 1])
+    expect(screen.queryByText(/measurement details/i)).not.toBeInTheDocument()
+  })
 })
