@@ -80,6 +80,12 @@ export const measurementService = {
       body: JSON.stringify(payload),
     })
   },
+
+  async delete(token: string, patientId: string, measurementId: string): Promise<void> {
+    return apiFetch(`/patients/${patientId}/measurements/${measurementId}`, token, {
+      method: "DELETE",
+    })
+  },
 }
 
 export const userService = {
