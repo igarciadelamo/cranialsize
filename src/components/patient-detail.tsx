@@ -2,6 +2,16 @@ import PatientGrowthChart from "@/components/patient-growth-chart"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -17,7 +27,7 @@ import { useAuth } from "@/lib/auth-context"
 import { usePatientStore } from "@/lib/patient-store"
 import { differenceInMonths } from "date-fns"
 import { motion } from "framer-motion"
-import { Calendar, Clock, Plus, Ruler, X } from "lucide-react"
+import { Calendar, Clock, Plus, Ruler, Trash2, X } from "lucide-react"
 import { useEffect, useState } from "react"
 
 interface PatientDetailProps {
@@ -28,9 +38,10 @@ interface PatientDetailProps {
 
 export default function PatientDetail({ patient: patientProp, onBack, onAddMeasurement }: PatientDetailProps) {
   const [selectedMeasurement, setSelectedMeasurement] = useState<Measurement | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
   const { accessToken } = useAuth()
-  const { patients, loadMeasurements, isMeasurementsLoading } = usePatientStore()
+  const { patients, loadMeasurements, isMeasurementsLoading, deleteMeasurement } = usePatientStore()
   const patient = patients.find((p) => p.id === patientProp.id) ?? patientProp
 
   useEffect(() => {
@@ -44,6 +55,13 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
   }
 
   const handleCloseDialog = () => {
+    setSelectedMeasurement(null)
+  }
+
+  const handleDeleteMeasurement = async () => {
+    if (!selectedMeasurement?.id || !accessToken) return
+    await deleteMeasurement(accessToken, patient.id, selectedMeasurement.id)
+    setShowDeleteConfirm(false)
     setSelectedMeasurement(null)
   }
 
@@ -255,7 +273,11 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
             )
           })()}
 
-          <DialogFooter className="sm:justify-center">
+          <DialogFooter className="sm:justify-between">
+            <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
             <Button variant="outline" onClick={handleCloseDialog}>
               <X className="h-4 w-4 mr-2" />
               Close
@@ -263,6 +285,27 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete measurement?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the measurement from{" "}
+              {selectedMeasurement && formatDate(selectedMeasurement.date)}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMeasurement}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

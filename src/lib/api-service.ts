@@ -40,6 +40,10 @@ async function apiFetch<T>(path: string, token: string, options?: RequestInit): 
     throw new Error(`${response.status} ${response.statusText}`)
   }
 
+  if (response.status === 204) {
+    return undefined as T
+  }
+
   return response.json()
 }
 
@@ -78,6 +82,12 @@ export const measurementService = {
     return apiFetch(`/patients/${patientId}/measurements/`, token, {
       method: "POST",
       body: JSON.stringify(payload),
+    })
+  },
+
+  async delete(token: string, patientId: string, measurementId: string): Promise<void> {
+    return apiFetch(`/patients/${patientId}/measurements/${measurementId}`, token, {
+      method: "DELETE",
     })
   },
 }
