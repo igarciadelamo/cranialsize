@@ -84,22 +84,13 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                   {patient.firstName} {patient.lastName}
                 </CardTitle>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="destructive"
-                  onClick={() => setShowDeletePatientConfirm(true)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Patient
-                </Button>
-                <Button
-                  onClick={onAddMeasurement}
-                  className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-sm shadow-teal-200/50"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Measurement
-                </Button>
-              </div>
+              <Button
+                onClick={onAddMeasurement}
+                className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-sm shadow-teal-200/50"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Measurement
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -199,9 +190,13 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
             </Tabs>
 
           </CardContent>
-          <CardFooter>
-            <Button variant="outline" onClick={onBack} className="w-full">
+          <CardFooter className="flex gap-2">
+            <Button variant="outline" onClick={onBack} className="flex-1">
               Back to Patient List
+            </Button>
+            <Button variant="destructive" onClick={() => setShowDeletePatientConfirm(true)}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Patient
             </Button>
           </CardFooter>
         </Card>
