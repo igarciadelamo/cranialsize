@@ -39,10 +39,9 @@ interface PatientDetailProps {
 export default function PatientDetail({ patient: patientProp, onBack, onAddMeasurement }: PatientDetailProps) {
   const [selectedMeasurement, setSelectedMeasurement] = useState<Measurement | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [showDeletePatientConfirm, setShowDeletePatientConfirm] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
   const { accessToken } = useAuth()
-  const { patients, loadMeasurements, isMeasurementsLoading, deleteMeasurement, deletePatient } = usePatientStore()
+  const { patients, loadMeasurements, isMeasurementsLoading, deleteMeasurement } = usePatientStore()
   const patient = patients.find((p) => p.id === patientProp.id) ?? patientProp
 
   useEffect(() => {
@@ -57,12 +56,6 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
 
   const handleCloseDialog = () => {
     setSelectedMeasurement(null)
-  }
-
-  const handleDeletePatient = async () => {
-    if (!accessToken) return
-    await deletePatient(accessToken, patient.id)
-    onBack()
   }
 
   const handleDeleteMeasurement = async () => {
@@ -190,13 +183,9 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
             </Tabs>
 
           </CardContent>
-          <CardFooter className="flex gap-2">
-            <Button variant="outline" onClick={onBack} className="flex-1">
+          <CardFooter>
+            <Button variant="outline" onClick={onBack} className="w-full">
               Back to Patient List
-            </Button>
-            <Button variant="destructive" onClick={() => setShowDeletePatientConfirm(true)}>
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete Patient
             </Button>
           </CardFooter>
         </Card>
@@ -296,26 +285,6 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={showDeletePatientConfirm} onOpenChange={setShowDeletePatientConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete patient?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete {patient.firstName} {patient.lastName} and all their measurements. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeletePatient}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>

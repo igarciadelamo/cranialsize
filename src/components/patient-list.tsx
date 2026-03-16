@@ -1,9 +1,20 @@
 import { useState, useEffect } from "react"
-import { Search, Plus, Calendar, User, ArrowUpDown } from "lucide-react"
+import { Search, Plus, Calendar, User, ArrowUpDown, Trash2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { usePatientStore } from "@/lib/patient-store"
+import { useAuth } from "@/lib/auth-context"
 import type { Patient } from "@/lib/types"
 import { formatDate, calculateAge } from "@/lib/utils"
 import { motion } from "framer-motion"
@@ -14,7 +25,9 @@ interface PatientListProps {
 }
 
 export default function PatientList({ onPatientSelect, onAddNewPatient }: PatientListProps) {
-  const { patients, isLoading } = usePatientStore()
+  const { patients, isLoading, deletePatient } = usePatientStore()
+  const { accessToken } = useAuth()
+  const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [sortField, setSortField] = useState<"name" | "age" | "records">("name")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
@@ -160,7 +173,7 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
                   <motion.div
                     key={patient.id}
                     variants={item}
-                    className="grid grid-cols-12 p-4 hover:bg-gray-50 cursor-pointer transition-colors card-hover-effect"
+                    className="group grid grid-cols-12 p-4 hover:bg-gray-50 cursor-pointer transition-colors card-hover-effect"
                     onClick={() => onPatientSelect(patient)}
                   >
                     <div className="col-span-5 font-medium text-gray-700 flex items-center">
@@ -178,11 +191,21 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
                       <Calendar className="h-4 w-4 mr-2 text-gray-400" />
                       {formatDate(patient.birthDate)}
                     </div>
-                    <div className="col-span-2 text-gray-600 flex items-center">
+                    <div className="col-span-1 text-gray-600 flex items-center">
                       <span className="pill-badge pill-badge-primary">
                         {patient.measurementCount ?? patient.measurements.length}{" "}
                         {(patient.measurementCount ?? patient.measurements.length) === 1 ? "record" : "records"}
                       </span>
+                    </div>
+                    <div className="col-span-1 flex items-center justify-end">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 hover:bg-red-50"
+                        onClick={(e) => { e.stopPropagation(); setPatientToDelete(patient) }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </motion.div>
                 ))}
@@ -207,6 +230,30 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
           </CardContent>
         </Card>
       </div>
+      <AlertDialog open={!!patientToDelete} onOpenChange={(open) => !open && setPatientToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete patient?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {patientToDelete?.firstName} {patientToDelete?.lastName} and all their measurements. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (patientToDelete && accessToken) {
+                  await deletePatient(accessToken, patientToDelete.id)
+                  setPatientToDelete(null)
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
