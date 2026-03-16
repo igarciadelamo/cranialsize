@@ -15,6 +15,7 @@ interface PatientStore {
   updatePatient: (id: string, patient: Partial<Patient>) => void
   addMeasurement: (token: string, patientId: string, measurement: Measurement) => Promise<void>
   deleteMeasurement: (token: string, patientId: string, measurementId: string) => Promise<void>
+  deletePatient: (token: string, patientId: string) => Promise<void>
 }
 
 
@@ -84,6 +85,13 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
     set((state) => ({
       patients: state.patients.map((patient) => (patient.id === id ? { ...patient, ...updatedPatient } : patient)),
     })),
+
+  deletePatient: async (token: string, patientId: string) => {
+    await patientService.delete(token, patientId)
+    set((state) => ({
+      patients: state.patients.filter((p) => p.id !== patientId),
+    }))
+  },
 
   deleteMeasurement: async (token: string, patientId: string, measurementId: string) => {
     await measurementService.delete(token, patientId, measurementId)
