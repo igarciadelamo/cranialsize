@@ -58,6 +58,10 @@ export const patientService = {
       body: JSON.stringify(payload),
     })
   },
+
+  async delete(token: string, patientId: string): Promise<void> {
+    return apiFetch(`/patients/${patientId}`, token, { method: "DELETE" })
+  },
 }
 
 export interface MeasurementResponse {

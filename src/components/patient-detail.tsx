@@ -39,9 +39,10 @@ interface PatientDetailProps {
 export default function PatientDetail({ patient: patientProp, onBack, onAddMeasurement }: PatientDetailProps) {
   const [selectedMeasurement, setSelectedMeasurement] = useState<Measurement | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showDeletePatientConfirm, setShowDeletePatientConfirm] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
   const { accessToken } = useAuth()
-  const { patients, loadMeasurements, isMeasurementsLoading, deleteMeasurement } = usePatientStore()
+  const { patients, loadMeasurements, isMeasurementsLoading, deleteMeasurement, deletePatient } = usePatientStore()
   const patient = patients.find((p) => p.id === patientProp.id) ?? patientProp
 
   useEffect(() => {
@@ -56,6 +57,12 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
 
   const handleCloseDialog = () => {
     setSelectedMeasurement(null)
+  }
+
+  const handleDeletePatient = async () => {
+    if (!accessToken) return
+    await deletePatient(accessToken, patient.id)
+    onBack()
   }
 
   const handleDeleteMeasurement = async () => {
@@ -77,13 +84,22 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                   {patient.firstName} {patient.lastName}
                 </CardTitle>
               </div>
-              <Button
-                onClick={onAddMeasurement}
-                className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-sm shadow-teal-200/50"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                New Measurement
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowDeletePatientConfirm(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Patient
+                </Button>
+                <Button
+                  onClick={onAddMeasurement}
+                  className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-sm shadow-teal-200/50"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Measurement
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -285,6 +301,26 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showDeletePatientConfirm} onOpenChange={setShowDeletePatientConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete patient?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {patient.firstName} {patient.lastName} and all their measurements. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePatient}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
