@@ -3,6 +3,7 @@ import { Calendar } from "@/components/ui/calendar"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -33,6 +34,7 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
   const [birthHeadCircumference, setBirthHeadCircumference] = useState(
     patient.birthHeadCircumference?.toString() ?? ""
   )
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<{
     firstName?: string
@@ -75,6 +77,9 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Patient</DialogTitle>
+          <DialogDescription>
+            Update the details for {patient.firstName} {patient.lastName}.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} id="edit-patient-form" className="space-y-4">
@@ -136,7 +141,7 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
 
           <div className="space-y-2">
             <Label>Birth Date</Label>
-            <Popover>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -147,7 +152,7 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <Calendar value={birthDate} onChange={setBirthDate} className="rounded-md" />
+                <Calendar value={birthDate} onChange={(date) => { setBirthDate(date); setCalendarOpen(false) }} className="rounded-md" />
               </PopoverContent>
             </Popover>
             {errors.birthDate && <p className="text-sm text-red-500">{errors.birthDate}</p>}
