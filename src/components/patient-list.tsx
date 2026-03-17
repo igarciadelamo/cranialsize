@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Search, Plus, Calendar, User, ArrowUpDown, Trash2 } from "lucide-react"
+import { Search, Plus, Calendar, User, ArrowUpDown, Pencil, Trash2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,6 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import EditPatientDialog from "@/components/edit-patient-dialog"
 import { usePatientStore } from "@/lib/patient-store"
 import { useAuth } from "@/lib/auth-context"
 import type { Patient } from "@/lib/types"
@@ -28,6 +29,7 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
   const { patients, isLoading, deletePatient } = usePatientStore()
   const { accessToken } = useAuth()
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null)
+  const [patientToEdit, setPatientToEdit] = useState<Patient | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [sortField, setSortField] = useState<"name" | "age" | "records">("name")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
@@ -115,7 +117,7 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
           </CardHeader>
           <CardContent className="p-0">
             <div className="grid grid-cols-12 bg-gray-50 p-4 text-sm font-medium text-gray-500 border-b">
-              <div className="col-span-5 flex items-center cursor-pointer" onClick={() => handleSort("name")}>
+              <div className="col-span-4 flex items-center cursor-pointer" onClick={() => handleSort("name")}>
                 <span>Patient Name</span>
                 {sortField === "name" && (
                   <ArrowUpDown
@@ -173,10 +175,10 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
                   <motion.div
                     key={patient.id}
                     variants={item}
-                    className="group grid grid-cols-12 p-4 hover:bg-gray-50 cursor-pointer transition-colors card-hover-effect"
+                    className="grid grid-cols-12 p-4 hover:bg-gray-50 cursor-pointer transition-colors card-hover-effect"
                     onClick={() => onPatientSelect(patient)}
                   >
-                    <div className="col-span-5 font-medium text-gray-700 flex items-center">
+                    <div className="col-span-4 font-medium text-gray-700 flex items-center">
                       <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center mr-3">
                         <User className="h-5 w-5 text-teal-600" />
                       </div>
@@ -197,11 +199,19 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
                         {(patient.measurementCount ?? patient.measurements.length) === 1 ? "record" : "records"}
                       </span>
                     </div>
-                    <div className="col-span-1 flex items-center justify-end">
+                    <div className="col-span-2 flex items-center justify-end gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 hover:bg-red-50"
+                        className="text-gray-400 hover:text-teal-600 hover:bg-teal-50"
+                        onClick={(e) => { e.stopPropagation(); setPatientToEdit(patient) }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-gray-400 hover:text-red-500 hover:bg-red-50"
                         onClick={(e) => { e.stopPropagation(); setPatientToDelete(patient) }}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -230,6 +240,14 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
           </CardContent>
         </Card>
       </div>
+      {patientToEdit && (
+        <EditPatientDialog
+          patient={patientToEdit}
+          open={!!patientToEdit}
+          onOpenChange={(open) => !open && setPatientToEdit(null)}
+        />
+      )}
+
       <AlertDialog open={!!patientToDelete} onOpenChange={(open) => !open && setPatientToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

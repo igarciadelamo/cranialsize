@@ -13,6 +13,7 @@ interface PatientStore {
   loadMeasurements: (token: string, patientId: string) => Promise<void>
   addPatient: (patient: Patient) => void
   updatePatient: (id: string, patient: Partial<Patient>) => void
+  editPatient: (token: string, patientId: string, data: Partial<Patient>) => Promise<void>
   addMeasurement: (token: string, patientId: string, measurement: Measurement) => Promise<void>
   deleteMeasurement: (token: string, patientId: string, measurementId: string) => Promise<void>
   deletePatient: (token: string, patientId: string) => Promise<void>
@@ -85,6 +86,26 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
     set((state) => ({
       patients: state.patients.map((patient) => (patient.id === id ? { ...patient, ...updatedPatient } : patient)),
     })),
+
+  editPatient: async (token: string, patientId: string, data: Partial<Patient>) => {
+    const payload: Record<string, unknown> = {}
+    if (data.firstName !== undefined) payload.firstName = data.firstName
+    if (data.lastName !== undefined) payload.lastName = data.lastName
+    if (data.birthDate !== undefined) payload.birthDate = data.birthDate.toISOString()
+    if (data.birthHeadCircumference !== undefined) payload.birthHeadCircumference = data.birthHeadCircumference
+    const updated = await patientService.patch(token, patientId, payload)
+    set((state) => ({
+      patients: state.patients.map((p) =>
+        p.id !== patientId ? p : {
+          ...p,
+          firstName: updated.firstName,
+          lastName: updated.lastName,
+          birthDate: new Date(updated.birthDate),
+          birthHeadCircumference: updated.birthHeadCircumference ?? undefined,
+        }
+      ),
+    }))
+  },
 
   deletePatient: async (token: string, patientId: string) => {
     await patientService.delete(token, patientId)
