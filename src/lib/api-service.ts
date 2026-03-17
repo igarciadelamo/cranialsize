@@ -59,6 +59,13 @@ export const patientService = {
     })
   },
 
+  async patch(token: string, patientId: string, payload: Partial<CreatePatientPayload>): Promise<PatientResponse> {
+    return apiFetch(`/patients/${patientId}`, token, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    })
+  },
+
   async delete(token: string, patientId: string): Promise<void> {
     return apiFetch(`/patients/${patientId}`, token, { method: "DELETE" })
   },
