@@ -3,6 +3,7 @@ import { Calendar } from "@/components/ui/calendar"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -76,6 +77,9 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Patient</DialogTitle>
+          <DialogDescription>
+            Update the details for {patient.firstName} {patient.lastName}.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} id="edit-patient-form" className="space-y-4">
