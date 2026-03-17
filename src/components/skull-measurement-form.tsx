@@ -22,6 +22,7 @@ interface SkullMeasurementFormProps {
 
 export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: SkullMeasurementFormProps) {
   const [measurementDate, setMeasurementDate] = useState<Date>(new Date())
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const [currentSize, setCurrentSize] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<{ currentSize?: string }>({})
@@ -71,7 +72,7 @@ export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: Sk
           <form onSubmit={handleSubmit} id="measurement-form" className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="measurementDate">Measurement Date</Label>
-              <Popover>
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
@@ -87,7 +88,7 @@ export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: Sk
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     value={measurementDate}
-                    onChange={setMeasurementDate}
+                    onChange={(date) => { setMeasurementDate(date); setCalendarOpen(false) }}
                     className="rounded-md"
                   />
                 </PopoverContent>
