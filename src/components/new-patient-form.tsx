@@ -27,6 +27,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [birthDate, setBirthDate] = useState<Date>()
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const [birthHeadCircumference, setBirthHeadCircumference] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<{
@@ -69,7 +70,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
         const created = await patientService.create(accessToken!, {
           firstName,
           lastName,
-          birthDate: birthDate.toISOString(),
+          birthDate: format(birthDate, "yyyy-MM-dd"),
           birthHeadCircumference: birthHeadCircumference ? parseFloat(birthHeadCircumference) : undefined,
         })
 
@@ -167,7 +168,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
 
             <div className="space-y-2">
               <Label htmlFor="birthDate">Birth Date</Label>
-              <Popover>
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
@@ -183,7 +184,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     value={birthDate}
-                    onChange={setBirthDate}
+                    onChange={(date) => { setBirthDate(date); setCalendarOpen(false) }}
                     className="rounded-md"
                   />
                 </PopoverContent>

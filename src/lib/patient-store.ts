@@ -1,4 +1,4 @@
-import { differenceInMonths } from "date-fns"
+import { differenceInMonths, format } from "date-fns"
 import { toast } from "sonner"
 import { create } from "zustand"
 import { measurementService, patientService } from "./api-service"
@@ -91,7 +91,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
     const payload: Record<string, unknown> = {}
     if (data.firstName !== undefined) payload.firstName = data.firstName
     if (data.lastName !== undefined) payload.lastName = data.lastName
-    if (data.birthDate !== undefined) payload.birthDate = data.birthDate.toISOString()
+    if (data.birthDate !== undefined) payload.birthDate = format(data.birthDate, "yyyy-MM-dd")
     if (data.birthHeadCircumference !== undefined) payload.birthHeadCircumference = data.birthHeadCircumference
     const updated = await patientService.patch(token, patientId, payload)
     set((state) => ({
@@ -136,7 +136,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
     const percentile = getPercentile(measurement.size, ageInMonths)
 
     const created = await measurementService.create(token, patientId, {
-      measuredAt: measurement.date.toISOString(),
+      measuredAt: format(measurement.date, "yyyy-MM-dd"),
       headCircumference: measurement.size,
     })
     measurement = { ...measurement, id: created.id, percentile }
