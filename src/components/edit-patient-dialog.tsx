@@ -31,6 +31,7 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
   const [firstName, setFirstName] = useState(patient.firstName)
   const [lastName, setLastName] = useState(patient.lastName)
   const [birthDate, setBirthDate] = useState<Date>(patient.birthDate)
+  const [sex, setSex] = useState<"M" | "F">(patient.sex)
   const [birthHeadCircumference, setBirthHeadCircumference] = useState(
     patient.birthHeadCircumference?.toString() ?? ""
   )
@@ -62,6 +63,7 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
         firstName,
         lastName,
         birthDate,
+        sex,
         birthHeadCircumference: birthHeadCircumference ? parseFloat(birthHeadCircumference) : undefined,
       })
       onOpenChange(false)
@@ -103,6 +105,36 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
               className={cn("h-12 border-gray-200", errors.lastName && "border-red-500")}
             />
             {errors.lastName && <p className="text-sm text-red-500">{errors.lastName}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Sex</Label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setSex("M")}
+                className={cn(
+                  "flex-1 h-12 rounded-md border text-sm font-medium transition-colors",
+                  sex === "M"
+                    ? "border-teal-600 bg-teal-50 text-teal-700"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                )}
+              >
+                Male
+              </button>
+              <button
+                type="button"
+                onClick={() => setSex("F")}
+                className={cn(
+                  "flex-1 h-12 rounded-md border text-sm font-medium transition-colors",
+                  sex === "F"
+                    ? "border-teal-600 bg-teal-50 text-teal-700"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                )}
+              >
+                Female
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2">

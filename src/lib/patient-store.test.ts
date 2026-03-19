@@ -26,6 +26,7 @@ describe("loadPatients", () => {
         lastName: "Doe",
         birthDate: "2024-01-01T00:00:00.000Z",
         birthHeadCircumference: null,
+        sex: "M",
         userId: null,
         createdAt: "2024-01-01T00:00:00.000Z",
         measurementCount: 0,
@@ -77,6 +78,7 @@ describe("loadMeasurements", () => {
           firstName: "John",
           lastName: "Doe",
           birthDate,
+          sex: "M" as const,
           measurements: [{ date: new Date(), size: 42 }],
         },
       ],
@@ -100,7 +102,7 @@ describe("loadMeasurements", () => {
     const { measurementService } = await import("./api-service")
     const birthDate = new Date("2024-01-01")
     usePatientStore.setState({
-      patients: [{ id: "real-1", firstName: "John", lastName: "Doe", birthDate, measurements: [] }],
+      patients: [{ id: "real-1", firstName: "John", lastName: "Doe", birthDate, sex: "M" as const, measurements: [] }],
     })
 
     vi.mocked(measurementService.getAll).mockResolvedValueOnce([
@@ -120,7 +122,7 @@ describe("loadMeasurements", () => {
     const { measurementService } = await import("./api-service")
     const { toast } = await import("sonner")
     usePatientStore.setState({
-      patients: [{ id: "real-1", firstName: "John", lastName: "Doe", birthDate: new Date(), measurements: [] }],
+      patients: [{ id: "real-1", firstName: "John", lastName: "Doe", birthDate: new Date(), sex: "M" as const, measurements: [] }],
     })
     vi.mocked(measurementService.getAll).mockRejectedValueOnce(new Error("Error"))
 
@@ -135,7 +137,7 @@ describe("loadMeasurements", () => {
 describe("updatePatient", () => {
   it("updates fields of an existing patient", () => {
     usePatientStore.setState({
-      patients: [{ id: "p1", firstName: "Old", lastName: "Name", birthDate: new Date(), measurements: [] }],
+      patients: [{ id: "p1", firstName: "Old", lastName: "Name", birthDate: new Date(), sex: "M" as const, measurements: [] }],
     })
 
     act(() => {
@@ -150,7 +152,7 @@ describe("updatePatient", () => {
 
 describe("addPatient", () => {
   it("adds a patient to the store", () => {
-    const newPatient = { id: "new-1", firstName: "Test", lastName: "User", birthDate: new Date(), measurements: [] }
+    const newPatient = { id: "new-1", firstName: "Test", lastName: "User", birthDate: new Date(), sex: "M" as const, measurements: [] }
 
     act(() => {
       usePatientStore.getState().addPatient(newPatient)
@@ -185,7 +187,7 @@ describe("addMeasurement", () => {
     const newerDate = new Date("2024-07-01")
     const olderDate = new Date("2024-03-01")
     usePatientStore.setState({
-      patients: [{ id: "real-1", firstName: "John", lastName: "Doe", birthDate, measurements: [{ date: newerDate, size: 43 }] }],
+      patients: [{ id: "real-1", firstName: "John", lastName: "Doe", birthDate, sex: "M" as const, measurements: [{ date: newerDate, size: 43 }] }],
     })
 
     await act(async () => {
@@ -209,7 +211,7 @@ describe("addMeasurement", () => {
 
     const birthDate = new Date("2024-01-01")
     usePatientStore.setState({
-      patients: [{ id: "real-1", firstName: "John", lastName: "Doe", birthDate, measurements: [] }],
+      patients: [{ id: "real-1", firstName: "John", lastName: "Doe", birthDate, sex: "M" as const, measurements: [] }],
     })
 
     await act(async () => {
