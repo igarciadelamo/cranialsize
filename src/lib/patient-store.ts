@@ -35,6 +35,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
         firstName: p.firstName,
         lastName: p.lastName,
         birthDate: new Date(p.birthDate),
+        sex: p.sex as "M" | "F",
         birthHeadCircumference: p.birthHeadCircumference ?? undefined,
         measurements: [],
         measurementCount: p.measurementCount,
@@ -92,6 +93,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
     if (data.firstName !== undefined) payload.firstName = data.firstName
     if (data.lastName !== undefined) payload.lastName = data.lastName
     if (data.birthDate !== undefined) payload.birthDate = format(data.birthDate, "yyyy-MM-dd")
+    if (data.sex !== undefined) payload.sex = data.sex
     if (data.birthHeadCircumference !== undefined) payload.birthHeadCircumference = data.birthHeadCircumference
     const updated = await patientService.patch(token, patientId, payload)
     set((state) => ({
@@ -101,6 +103,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
           firstName: updated.firstName,
           lastName: updated.lastName,
           birthDate: new Date(updated.birthDate),
+          sex: updated.sex as "M" | "F",
           birthHeadCircumference: updated.birthHeadCircumference ?? undefined,
         }
       ),

@@ -11,6 +11,7 @@ export interface Patient {
   firstName: string
   lastName: string
   birthDate: Date
+  sex: "M" | "F"
   birthHeadCircumference?: number // Optional head circumference at birth
   measurements: Measurement[]
   measurementCount?: number

@@ -17,6 +17,7 @@ const mockPatient = {
   firstName: "John",
   lastName: "Doe",
   birthDate: new Date("2024-01-01"),
+  sex: "M" as const,
   measurements: [],
 }
 

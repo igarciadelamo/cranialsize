@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import PatientDetail from "./patient-detail"
+import type { Patient } from "@/lib/types"
 
 vi.mock("@/components/patient-growth-chart", () => ({
   default: () => <div data-testid="growth-chart" />,
@@ -18,11 +19,12 @@ vi.mock("@/lib/patient-store", () => ({
 }))
 
 const birthDate = new Date("2024-01-01")
-const mockPatient = {
+const mockPatient: Patient = {
   id: "real-1",
   firstName: "John",
   lastName: "Doe",
   birthDate,
+  sex: "M",
   measurements: [],
 }
 

@@ -28,12 +28,14 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
   const [lastName, setLastName] = useState("")
   const [birthDate, setBirthDate] = useState<Date>()
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [sex, setSex] = useState<"M" | "F" | "">("")
   const [birthHeadCircumference, setBirthHeadCircumference] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<{
     firstName?: string
     lastName?: string
     birthDate?: string
+    sex?: string
     birthHeadCircumference?: string
   }>({})
 
@@ -43,34 +45,23 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const newErrors: {
-      firstName?: string
-      lastName?: string
-      birthDate?: string
-      birthHeadCircumference?: string
-    } = {}
+    const newErrors: typeof errors = {}
 
-    if (!firstName.trim()) {
-      newErrors.firstName = "First name is required"
-    }
-
-    if (!lastName.trim()) {
-      newErrors.lastName = "Last name is required"
-    }
-
-    if (!birthDate) {
-      newErrors.birthDate = "Birth date is required"
-    }
+    if (!firstName.trim()) newErrors.firstName = "First name is required"
+    if (!lastName.trim()) newErrors.lastName = "Last name is required"
+    if (!birthDate) newErrors.birthDate = "Birth date is required"
+    if (!sex) newErrors.sex = "Sex is required"
 
     setErrors(newErrors)
 
-    if (Object.keys(newErrors).length === 0 && birthDate) {
+    if (Object.keys(newErrors).length === 0 && birthDate && sex) {
       setIsSubmitting(true)
       try {
         const created = await patientService.create(accessToken!, {
           firstName,
           lastName,
           birthDate: format(birthDate, "yyyy-MM-dd"),
+          sex,
           birthHeadCircumference: birthHeadCircumference ? parseFloat(birthHeadCircumference) : undefined,
         })
 
@@ -79,6 +70,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
           firstName: created.firstName,
           lastName: created.lastName,
           birthDate: new Date(created.birthDate),
+          sex: created.sex as "M" | "F",
           birthHeadCircumference: created.birthHeadCircumference ?? undefined,
           measurements: [],
         }
@@ -133,6 +125,39 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
                 )}
               />
               {errors.lastName && <p className="text-sm text-red-500">{errors.lastName}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Sex</Label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setSex("M"); setErrors((prev) => ({ ...prev, sex: undefined })) }}
+                  className={cn(
+                    "flex-1 h-12 rounded-md border text-sm font-medium transition-colors",
+                    sex === "M"
+                      ? "border-teal-600 bg-teal-50 text-teal-700"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300",
+                    errors.sex && sex !== "M" && "border-red-300"
+                  )}
+                >
+                  Male
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setSex("F"); setErrors((prev) => ({ ...prev, sex: undefined })) }}
+                  className={cn(
+                    "flex-1 h-12 rounded-md border text-sm font-medium transition-colors",
+                    sex === "F"
+                      ? "border-teal-600 bg-teal-50 text-teal-700"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300",
+                    errors.sex && sex !== "F" && "border-red-300"
+                  )}
+                >
+                  Female
+                </button>
+              </div>
+              {errors.sex && <p className="text-sm text-red-500">{errors.sex}</p>}
             </div>
 
             <div className="space-y-2">

@@ -87,7 +87,7 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-gradient-secondary p-4 rounded-xl shadow-sm">
                 <p className="text-sm text-gray-500">Age</p>
                 <p className="text-xl font-semibold text-gray-800">{calculateAge(patient.birthDate)}</p>
@@ -97,6 +97,12 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                 <p className="text-xl font-semibold text-gray-800 flex items-center">
                   <Calendar className="h-4 w-4 mr-2 text-teal-600" />
                   {formatDate(patient.birthDate)}
+                </p>
+              </div>
+              <div className="bg-gradient-secondary p-4 rounded-xl shadow-sm">
+                <p className="text-sm text-gray-500">Sex</p>
+                <p className="text-xl font-semibold text-gray-800">
+                  {patient.sex === "M" ? "Male" : "Female"}
                 </p>
               </div>
               <div className="bg-gradient-secondary p-4 rounded-xl shadow-sm">
