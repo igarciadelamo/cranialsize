@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useAuth } from "@/lib/auth-context"
 import { usePatientStore } from "@/lib/patient-store"
-import type { Patient } from "@/lib/types"
+import type { Patient, UpdatePatientData } from "@/lib/types"
 import { HC_BIRTH_MIN, HC_BIRTH_MAX } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
@@ -59,13 +59,14 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
 
     setIsSubmitting(true)
     try {
-      await editPatient(accessToken!, patient.id, {
+      const data: UpdatePatientData = {
         firstName,
         lastName,
         birthDate,
         sex,
-        birthHeadCircumference: birthHeadCircumference ? parseFloat(birthHeadCircumference) : undefined,
-      })
+        birthHeadCircumference: birthHeadCircumference ? parseFloat(birthHeadCircumference) : null,
+      }
+      await editPatient(accessToken!, patient.id, data)
       onOpenChange(false)
     } catch {
       toast.error("Error saving patient. Please try again.")
@@ -138,6 +139,25 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
           </div>
 
           <div className="space-y-2">
+            <Label>Birth Date</Label>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn("w-full justify-start text-left font-normal", !birthDate && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4 text-teal-600" />
+                  {birthDate ? format(birthDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar value={birthDate} onChange={(date) => { setBirthDate(date); setCalendarOpen(false) }} className="rounded-md" />
+              </PopoverContent>
+            </Popover>
+            {errors.birthDate && <p className="text-sm text-red-500">{errors.birthDate}</p>}
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="edit-birthHeadCircumference">Birth Head Circumference (cm) - Optional</Label>
             <Input
               id="edit-birthHeadCircumference"
@@ -169,25 +189,6 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
             {errors.birthHeadCircumference && (
               <p className="text-sm text-red-500">{errors.birthHeadCircumference}</p>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <Label>Birth Date</Label>
-            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn("w-full justify-start text-left font-normal", !birthDate && "text-muted-foreground")}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4 text-teal-600" />
-                  {birthDate ? format(birthDate, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar value={birthDate} onChange={(date) => { setBirthDate(date); setCalendarOpen(false) }} className="rounded-md" />
-              </PopoverContent>
-            </Popover>
-            {errors.birthDate && <p className="text-sm text-red-500">{errors.birthDate}</p>}
           </div>
         </form>
 

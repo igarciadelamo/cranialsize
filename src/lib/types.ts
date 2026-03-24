@@ -5,6 +5,14 @@ export interface Measurement {
   percentile?: string
 }
 
+export interface UpdatePatientData {
+  firstName?: string
+  lastName?: string
+  birthDate?: Date
+  sex?: "M" | "F"
+  birthHeadCircumference?: number | null
+}
+
 export interface Patient {
   id: string
   userId?: string // Associate patient with a user

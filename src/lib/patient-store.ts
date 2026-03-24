@@ -3,7 +3,7 @@ import { toast } from "sonner"
 import { create } from "zustand"
 import { measurementService, patientService } from "./api-service"
 import { getPercentile } from "./skull-calculations"
-import type { Measurement, Patient } from "./types"
+import type { Measurement, Patient, UpdatePatientData } from "./types"
 
 interface PatientStore {
   patients: Patient[]
@@ -13,7 +13,7 @@ interface PatientStore {
   loadMeasurements: (token: string, patientId: string) => Promise<void>
   addPatient: (patient: Patient) => void
   updatePatient: (id: string, patient: Partial<Patient>) => void
-  editPatient: (token: string, patientId: string, data: Partial<Patient>) => Promise<void>
+  editPatient: (token: string, patientId: string, data: UpdatePatientData) => Promise<void>
   addMeasurement: (token: string, patientId: string, measurement: Measurement) => Promise<void>
   deleteMeasurement: (token: string, patientId: string, measurementId: string) => Promise<void>
   deletePatient: (token: string, patientId: string) => Promise<void>
@@ -88,7 +88,7 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
       patients: state.patients.map((patient) => (patient.id === id ? { ...patient, ...updatedPatient } : patient)),
     })),
 
-  editPatient: async (token: string, patientId: string, data: Partial<Patient>) => {
+  editPatient: async (token: string, patientId: string, data: UpdatePatientData) => {
     const payload: Record<string, unknown> = {}
     if (data.firstName !== undefined) payload.firstName = data.firstName
     if (data.lastName !== undefined) payload.lastName = data.lastName
