@@ -61,7 +61,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
     referenceService.getHeadCircumferenceCurves(patient.sex).then(setReferenceCurves).catch(() => {})
   }, [patient.sex])
 
-  const { chartData, clampedMaxAge, ticks } = useMemo(() => {
+  const { patientByMonth, clampedMaxAge, ticks } = useMemo(() => {
     const sortedMeasurements = [...patient.measurements].sort((a, b) => a.date.getTime() - b.date.getTime())
 
     const measurementsWithAge = sortedMeasurements.map((m) => ({
@@ -86,9 +86,12 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
     const clampedMaxAge = Math.max(lastMeasurementAge, patientAgeNow, 6) + 2
     const ticks = Array.from({ length: clampedMaxAge + 1 }, (_, i) => i)
 
-    const refByMonth = new Map(referenceCurves.map((r) => [r.month, r]))
+    return { patientByMonth, clampedMaxAge, ticks }
+  }, [patient])
 
-    const chartData = ticks.map((month) => {
+  const chartData = useMemo(() => {
+    const refByMonth = new Map(referenceCurves.map((r) => [r.month, r]))
+    return ticks.map((month) => {
       const ref = refByMonth.get(month)
       const pat = patientByMonth.get(month)
       return {
@@ -97,9 +100,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
         ...(pat ? { size: pat.size, date: pat.date } : {}),
       }
     })
-
-    return { chartData, clampedMaxAge, ticks }
-  }, [patient, referenceCurves])
+  }, [ticks, patientByMonth, referenceCurves])
 
   if (patient.measurements.length === 0) {
     return (
@@ -179,7 +180,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
                 stroke="#14b8a6"
                 strokeWidth={3}
                 name="Patient"
-                connectNulls={false}
+                connectNulls
                 activeDot={{ r: 8, stroke: "#0d9488", strokeWidth: 2, fill: "#fff" }}
                 dot={{ stroke: "#0d9488", strokeWidth: 2, r: 4, fill: "#fff" }}
               />
