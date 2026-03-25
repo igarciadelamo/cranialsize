@@ -1,8 +1,7 @@
-import { differenceInMonths, format } from "date-fns"
+import { format } from "date-fns"
 import { toast } from "sonner"
 import { create } from "zustand"
 import { measurementService, patientService } from "./api-service"
-import { getPercentile } from "./skull-calculations"
 import type { Measurement, Patient, UpdatePatientData } from "./types"
 
 interface PatientStore {
@@ -56,16 +55,12 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
     set({ isMeasurementsLoading: true })
     try {
       const data = await measurementService.getAll(token, patientId)
-      const measurements: Measurement[] = data.map((m) => {
-        const date = new Date(m.measuredAt)
-        const ageInMonths = differenceInMonths(date, patient.birthDate)
-        return {
-          id: m.id,
-          date,
-          size: m.headCircumference,
-          percentile: getPercentile(m.headCircumference, ageInMonths),
-        }
-      })
+      const measurements: Measurement[] = data.map((m) => ({
+        id: m.id,
+        date: new Date(m.measuredAt),
+        size: m.headCircumference,
+        percentile: m.percentile,
+      }))
       set((state) => ({
         patients: state.patients.map((p) =>
           p.id === patientId ? { ...p, measurements } : p
@@ -135,14 +130,11 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
     const patient = get().patients.find((p) => p.id === patientId)
     if (!patient) return
 
-    const ageInMonths = differenceInMonths(measurement.date, patient.birthDate)
-    const percentile = getPercentile(measurement.size, ageInMonths)
-
     const created = await measurementService.create(token, patientId, {
       measuredAt: format(measurement.date, "yyyy-MM-dd"),
       headCircumference: measurement.size,
     })
-    measurement = { ...measurement, id: created.id, percentile }
+    measurement = { ...measurement, id: created.id, percentile: created.percentile }
 
     set((state) => ({
       patients: state.patients.map((p) => {
