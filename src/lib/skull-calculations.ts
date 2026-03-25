@@ -19,20 +19,6 @@ export function calculateExpectedSize(ageInMonths: number): number {
 }
 
 /**
- * Determine approximate growth percentile based on deviation from expected size
- */
-export function getPercentile(size: number, ageInMonths: number): string {
-  const expected = calculateExpectedSize(ageInMonths)
-  const difference = size - expected
-
-  if (difference > 2) return "Above 95th"
-  if (difference > 1) return "75th-95th"
-  if (difference > -1) return "25th-75th"
-  if (difference > -2) return "5th-25th"
-  return "Below 5th"
-}
-
-/**
  * Estimate the birth size based on current measurements and age
  */
 export function calculateEstimatedBirthSize(currentSize: number, ageInMonths: number): number {
