@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { calculateEstimatedBirthSize, calculateExpectedSize, getPercentile } from "@/lib/skull-calculations"
+import { calculateEstimatedBirthSize, calculateExpectedSize } from "@/lib/skull-calculations"
 import type { Measurement, Patient } from "@/lib/types"
 import { formatDate } from "@/lib/utils"
 import { differenceInDays, differenceInMonths } from "date-fns"
@@ -24,7 +24,7 @@ export default function Results({ patient, data, onBack }: ResultsProps) {
   const estimatedBirthSize = calculateEstimatedBirthSize(currentSize, ageInMonths)
 
   const sizeDifference = currentSize - expectedSize
-  const percentile = data.percentile ?? getPercentile(currentSize, ageInMonths)
+  const percentile = data.percentile
 
   return (
     <motion.div
