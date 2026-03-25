@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { referenceService, type ReferencePoint } from "@/lib/api-service"
 import { calculateExpectedSize } from "@/lib/skull-calculations"
 import type { Measurement, Patient } from "@/lib/types"
 import { differenceInMonths, format } from "date-fns"
-import { useMemo, type FC } from "react"
+import { useEffect, useMemo, useState, type FC } from "react"
 import {
-  Area,
   CartesianGrid,
   Legend,
   Line,
@@ -19,10 +19,18 @@ interface PatientGrowthChartProps {
   patient: Patient
 }
 
+const REFERENCE_LINES = [
+  { key: "p97", label: "P97", color: "#f87171", dash: "4 3" },
+  { key: "p85", label: "P85", color: "#94a3b8", dash: "4 3" },
+  { key: "p50", label: "P50", color: "#475569", dash: "5 3" },
+  { key: "p15", label: "P15", color: "#94a3b8", dash: "4 3" },
+  { key: "p3",  label: "P3",  color: "#f87171", dash: "4 3" },
+] as const
+
 const CustomTooltip: FC<any> = ({ active, payload }) => {
   if (!active || !payload || !payload[0]?.payload) return null
-
   const data = payload[0].payload
+  if (!data.size) return null
 
   return (
     <div className="bg-white p-3 shadow-lg rounded-lg border border-gray-100">
@@ -30,18 +38,16 @@ const CustomTooltip: FC<any> = ({ active, payload }) => {
         <div className="flex flex-col">
           <span className="text-[0.70rem] uppercase text-gray-500">Age</span>
           <span className="font-bold text-gray-700">
-            {data?.ageInMonths} {data?.ageInMonths === 1 ? "month" : "months"}
+            {data.ageInMonths} {data.ageInMonths === 1 ? "month" : "months"}
           </span>
         </div>
         <div className="flex flex-col">
           <span className="text-[0.70rem] uppercase text-gray-500">Size</span>
-          <span className="font-bold text-gray-700">{data?.size?.toFixed(1) ?? "N/A"} cm</span>
+          <span className="font-bold text-gray-700">{data.size?.toFixed(1) ?? "N/A"} cm</span>
         </div>
         <div className="flex flex-col">
           <span className="text-[0.70rem] uppercase text-gray-500">Date</span>
-          <span className="font-bold text-gray-700">
-            {data?.date ?? "N/A"}
-          </span>
+          <span className="font-bold text-gray-700">{data.date ?? "N/A"}</span>
         </div>
       </div>
     </div>
@@ -49,52 +55,45 @@ const CustomTooltip: FC<any> = ({ active, payload }) => {
 }
 
 export default function PatientGrowthChart({ patient }: PatientGrowthChartProps) {
+  const [referenceCurves, setReferenceCurves] = useState<ReferencePoint[]>([])
+
+  useEffect(() => {
+    referenceService.getHeadCircumferenceCurves(patient.sex).then(setReferenceCurves).catch(() => {})
+  }, [patient.sex])
+
   const { patientData, referenceData, clampedMaxAge, ticks } = useMemo(() => {
-    // Sort measurements by date (oldest first)
     const sortedMeasurements = [...patient.measurements].sort((a, b) => a.date.getTime() - b.date.getTime())
 
-    // Calculate months since birth for each measurement
-    const measurementsWithAge = sortedMeasurements.map((measurement) => {
-      const ageInMonths = differenceInMonths(measurement.date, patient.birthDate)
-      return {
-        ageInMonths,
-        size: measurement.size,
-        date: format(measurement.date, "MMM d, yyyy"),
-      }
-    })
+    const measurementsWithAge = sortedMeasurements.map((m) => ({
+      ageInMonths: differenceInMonths(m.date, patient.birthDate),
+      size: m.size,
+      date: format(m.date, "MMM d, yyyy"),
+    }))
 
-    // Add birth point (estimated or actual)
     const birthSize =
       patient.measurements.length > 0
         ? calculateEstimatedBirthSizeFromMeasurements(patient.measurements, patient.birthDate)
-        : 35 // Default average newborn head size if no measurements
+        : 35
 
-    const dataWithBirth = [
+    const patientData = [
       { ageInMonths: 0, size: birthSize, date: format(patient.birthDate, "MMM d, yyyy") },
       ...measurementsWithAge,
     ]
 
-    // Generate reference line data (50th percentile)
-    const referenceData = []
     const patientAgeNow = differenceInMonths(new Date(), patient.birthDate)
     const lastMeasurementAge = measurementsWithAge.length > 0
       ? Math.max(...measurementsWithAge.map((m) => m.ageInMonths))
       : 0
-    const maxAge = Math.max(lastMeasurementAge, patientAgeNow) + 2
-    const clampedMaxAge = Math.max(maxAge, 6)
+    const clampedMaxAge = Math.max(lastMeasurementAge, patientAgeNow, 6) + 2
     const ticks = Array.from({ length: clampedMaxAge + 1 }, (_, i) => i)
 
-    for (let month = 0; month <= clampedMaxAge; month++) {
-      referenceData.push({
-        ageInMonths: month,
-        expectedSize: calculateExpectedSize(month),
-      })
-    }
+    const referenceData = referenceCurves
+      .filter((r) => r.month <= clampedMaxAge)
+      .map((r) => ({ ageInMonths: r.month, ...r }))
 
-    return { patientData: dataWithBirth, referenceData, clampedMaxAge, ticks }
-  }, [patient])
+    return { patientData, referenceData, clampedMaxAge, ticks }
+  }, [patient, referenceCurves])
 
-  // If no measurements, show a message
   if (patient.measurements.length === 0) {
     return (
       <Card className="shadow-md border-0 overflow-hidden">
@@ -104,18 +103,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
         <CardContent>
           <div className="p-8 text-center">
             <div className="mx-auto h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-gray-400"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
                 <path d="M3 3v18h18" />
                 <path d="m19 9-5 5-4-4-3 3" />
               </svg>
@@ -137,78 +125,56 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
         <div className="h-[250px] md:h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-              <defs>
-                <linearGradient id="colorSize" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis
                 dataKey="ageInMonths"
                 type="number"
                 domain={[0, clampedMaxAge]}
                 ticks={ticks}
-                label={{ 
-                  value: "Age (months)", 
-                  position: "bottom", 
+                label={{
+                  value: "Age (months)",
+                  position: "bottom",
                   offset: 20,
-                  style: {
-                    textAnchor: 'middle',
-                    fill: '#334155',
-                    fontSize: 14,
-                    fontWeight: 600
-                  }
+                  style: { textAnchor: "middle", fill: "#334155", fontSize: 14, fontWeight: 600 },
                 }}
               />
               <YAxis
-                label={{ 
-                  value: "Head Circumference (cm)", 
-                  angle: -90, 
+                label={{
+                  value: "Head Circumference (cm)",
+                  angle: -90,
                   position: "insideLeft",
                   offset: 10,
-                  style: {
-                    textAnchor: 'middle',
-                    fill: '#334155',
-                    fontSize: 14,
-                    fontWeight: 600
-                  }
+                  style: { textAnchor: "middle", fill: "#334155", fontSize: 14, fontWeight: 600 },
                 }}
                 domain={["dataMin - 2", "dataMax + 2"]}
-                tickFormatter={(value) => Math.round(value).toString()}
+                tickFormatter={(v) => Math.round(v).toString()}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
 
-              {/* Expected size reference line */}
-              <Line
-                data={referenceData}
-                type="monotone"
-                dataKey="expectedSize"
-                stroke="#94a3b8"
-                strokeDasharray="5 5"
-                dot={false}
-                name="50th Percentile"
-              />
+              {REFERENCE_LINES.map(({ key, label, color, dash }) => (
+                <Line
+                  key={key}
+                  data={referenceData}
+                  type="monotone"
+                  dataKey={key}
+                  stroke={color}
+                  strokeWidth={1}
+                  strokeDasharray={dash}
+                  dot={false}
+                  name={label}
+                />
+              ))}
 
-              {/* Patient's actual measurements */}
               <Line
                 data={patientData}
                 type="monotone"
                 dataKey="size"
                 stroke="#14b8a6"
                 strokeWidth={3}
-                name="Patient Measurements"
+                name="Patient"
                 activeDot={{ r: 8, stroke: "#0d9488", strokeWidth: 2, fill: "#fff" }}
                 dot={{ stroke: "#0d9488", strokeWidth: 2, r: 4, fill: "#fff" }}
-              />
-              <Area
-                data={patientData}
-                type="monotone"
-                dataKey="size"
-                stroke="none"
-                fillOpacity={1}
-                fill="url(#colorSize)"
               />
             </LineChart>
           </ResponsiveContainer>
@@ -246,23 +212,11 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
   )
 }
 
-// Helper function to estimate birth size from available measurements
 function calculateEstimatedBirthSizeFromMeasurements(measurements: Measurement[], birthDate: Date): number {
   if (measurements.length === 0) return 35
-
-  // Use the earliest measurement to estimate birth size
-  const sortedMeasurements = [...measurements].sort((a, b) => a.date.getTime() - b.date.getTime())
-
-  const earliestMeasurement = sortedMeasurements[0]
-  const ageInMonths = differenceInMonths(earliestMeasurement.date, birthDate)
-
-  // Calculate expected size at measurement age
-  const expectedSize = calculateExpectedSize(ageInMonths)
-
-  // Calculate the difference between actual and expected
-  const sizeDifference = earliestMeasurement.size - expectedSize
-
-  // Apply this difference to the expected birth size (around 35cm)
-  const expectedBirthSize = calculateExpectedSize(0)
-  return Math.max(expectedBirthSize + sizeDifference, 30)
+  const sorted = [...measurements].sort((a, b) => a.date.getTime() - b.date.getTime())
+  const earliest = sorted[0]
+  const ageInMonths = differenceInMonths(earliest.date, birthDate)
+  const sizeDifference = earliest.size - calculateExpectedSize(ageInMonths)
+  return Math.max(calculateExpectedSize(0) + sizeDifference, 30)
 }
