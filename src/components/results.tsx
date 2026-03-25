@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { calculateEstimatedBirthSize, calculateExpectedSize } from "@/lib/skull-calculations"
+import { referenceService } from "@/lib/api-service"
+import { calculateEstimatedBirthSize } from "@/lib/skull-calculations"
 import type { Measurement, Patient } from "@/lib/types"
 import { formatDate } from "@/lib/utils"
 import { differenceInDays, differenceInMonths } from "date-fns"
 import { motion } from "framer-motion"
-import { ArrowLeft, Calendar, ChevronRight, Ruler } from "lucide-react"
+import { useEffect, useState } from "react"
+import { ArrowLeft, Calendar, Ruler } from "lucide-react"
 
 interface ResultsProps {
   patient: Patient
@@ -20,10 +22,19 @@ export default function Results({ patient, data, onBack }: ResultsProps) {
   const ageInDays = differenceInDays(measurementDate, birthDate)
   const ageInMonths = differenceInMonths(measurementDate, birthDate)
 
-  const expectedSize = calculateExpectedSize(ageInMonths)
-  const estimatedBirthSize = calculateEstimatedBirthSize(currentSize, ageInMonths)
+  const [p50, setP50] = useState<number | null>(null)
 
-  const sizeDifference = currentSize - expectedSize
+  useEffect(() => {
+    referenceService.getHeadCircumferenceCurves(patient.sex)
+      .then((curves) => {
+        const point = curves.find((c) => c.month === ageInMonths)
+        setP50(point?.p50 ?? null)
+      })
+      .catch(() => {})
+  }, [patient.sex, ageInMonths])
+
+  const estimatedBirthSize = calculateEstimatedBirthSize(currentSize, ageInMonths)
+  const sizeDifference = p50 != null ? currentSize - p50 : null
   const percentile = data.percentile
 
   return (
@@ -66,8 +77,8 @@ export default function Results({ patient, data, onBack }: ResultsProps) {
             >
               <p className="text-sm text-gray-500">Age at Measurement</p>
               <p className="text-lg font-semibold text-gray-800">
-                {ageInMonths} months
-                <span className="text-sm font-normal text-gray-500 ml-1">({ageInDays} days)</span>
+                {ageInMonths} months{" "}
+                <span className="text-sm font-normal text-gray-500">({ageInDays} days)</span>
               </p>
             </motion.div>
             <motion.div
@@ -85,22 +96,22 @@ export default function Results({ patient, data, onBack }: ResultsProps) {
           </div>
 
           <div className="space-y-3">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.3 }}
-              className="bg-white border rounded-xl p-4 shadow-sm"
-            >
-              <p className="text-sm text-gray-500">Expected Size (50th percentile)</p>
-              <p className="text-lg font-semibold text-gray-800">{expectedSize.toFixed(1)} cm</p>
-              <p className={`text-sm ${sizeDifference >= 0 ? "text-green-600" : "text-amber-600"} flex items-center`}>
-                <span className={`mr-1 ${sizeDifference >= 0 ? "text-green-600" : "text-amber-600"}`}>
-                  {sizeDifference >= 0 ? "+" : ""}
-                  {sizeDifference.toFixed(1)} cm
-                </span>
-                from expected
-              </p>
-            </motion.div>
+            {p50 != null && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.3 }}
+                className="bg-white border rounded-xl p-4 shadow-sm"
+              >
+                <p className="text-sm text-gray-500">Expected Size (P50 WHO)</p>
+                <p className="text-lg font-semibold text-gray-800">{p50.toFixed(1)} cm</p>
+                {sizeDifference != null && (
+                  <p className={`text-sm ${sizeDifference >= 0 ? "text-green-600" : "text-amber-600"} flex items-center`}>
+                    {sizeDifference >= 0 ? "+" : ""}{sizeDifference.toFixed(1)} cm from expected
+                  </p>
+                )}
+              </motion.div>
+            )}
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -133,11 +144,12 @@ export default function Results({ patient, data, onBack }: ResultsProps) {
               transition={{ delay: 0.6, duration: 0.3 }}
               className="bg-white border rounded-xl p-4 shadow-sm"
             >
-              <p className="text-sm text-gray-500">Approximate Percentile</p>
-              <div className="flex items-center justify-between mt-1">
-                <span className="pill-badge pill-badge-primary text-base px-3 py-1">{percentile}</span>
-                <ChevronRight className="h-4 w-4 text-teal-600" />
-              </div>
+              <p className="text-sm text-gray-500">Percentile (WHO)</p>
+              {percentile ? (
+                <span className="pill-badge pill-badge-primary text-base px-3 py-1 mt-1 inline-block">{percentile}</span>
+              ) : (
+                <p className="text-sm text-gray-400 mt-1">Not available</p>
+              )}
             </motion.div>
           </div>
         </CardContent>
@@ -151,4 +163,3 @@ export default function Results({ patient, data, onBack }: ResultsProps) {
     </motion.div>
   )
 }
-
