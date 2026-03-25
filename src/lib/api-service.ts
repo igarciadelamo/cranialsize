@@ -79,6 +79,7 @@ export interface MeasurementResponse {
   measuredAt: string
   headCircumference: number
   createdAt: string
+  percentile?: string
 }
 
 export interface CreateMeasurementPayload {
@@ -102,6 +103,23 @@ export const measurementService = {
     return apiFetch(`/patients/${patientId}/measurements/${measurementId}`, token, {
       method: "DELETE",
     })
+  },
+}
+
+export interface ReferencePoint {
+  month: number
+  p3: number
+  p15: number
+  p50: number
+  p85: number
+  p97: number
+}
+
+export const referenceService = {
+  async getHeadCircumferenceCurves(sex: "M" | "F"): Promise<ReferencePoint[]> {
+    const response = await fetch(`${API_BASE_URL}/reference/head-circumference?sex=${sex}`)
+    if (!response.ok) throw new Error(`${response.status}`)
+    return response.json()
   },
 }
 
