@@ -79,6 +79,7 @@ export interface MeasurementResponse {
   measuredAt: string
   headCircumference: number
   createdAt: string
+  percentile?: string
 }
 
 export interface CreateMeasurementPayload {
