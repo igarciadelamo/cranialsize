@@ -20,12 +20,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { calculateExpectedSize } from "@/lib/skull-calculations"
 import type { Measurement, Patient } from "@/lib/types"
 import { calculateAge, formatDate, formatDateTime } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
 import { usePatientStore } from "@/lib/patient-store"
-import { differenceInMonths } from "date-fns"
 import { motion } from "framer-motion"
 import { Calendar, Clock, Plus, Ruler, Trash2, X } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -209,8 +207,6 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
           </DialogHeader>
 
           {selectedMeasurement && (() => {
-            const ageMonths = differenceInMonths(selectedMeasurement.date, patient.birthDate)
-            const expectedSize = calculateExpectedSize(ageMonths)
             return (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -256,22 +252,6 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Age at Measurement:</span>
                     <span className="font-medium">{calculateAge(patient.birthDate, selectedMeasurement.date)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Expected Size (50th percentile):</span>
-                    <span className="font-medium">{expectedSize.toFixed(1)} cm</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Difference from Expected:</span>
-                    <span
-                      className={
-                        selectedMeasurement.size - expectedSize >= 0
-                          ? "font-medium text-green-600"
-                          : "font-medium text-amber-600"
-                      }
-                    >
-                      {(selectedMeasurement.size - expectedSize).toFixed(1)} cm
-                    </span>
                   </div>
                 </div>
               </div>
