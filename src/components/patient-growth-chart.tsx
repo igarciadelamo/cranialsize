@@ -61,7 +61,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
     referenceService.getHeadCircumferenceCurves(patient.sex).then(setReferenceCurves).catch(() => {})
   }, [patient.sex])
 
-  const { patientData, referenceData, clampedMaxAge, ticks } = useMemo(() => {
+  const { chartData, clampedMaxAge, ticks } = useMemo(() => {
     const sortedMeasurements = [...patient.measurements].sort((a, b) => a.date.getTime() - b.date.getTime())
 
     const measurementsWithAge = sortedMeasurements.map((m) => ({
@@ -75,10 +75,9 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
         ? calculateEstimatedBirthSizeFromMeasurements(patient.measurements, patient.birthDate)
         : 35
 
-    const patientData = [
-      { ageInMonths: 0, size: birthSize, date: format(patient.birthDate, "MMM d, yyyy") },
-      ...measurementsWithAge,
-    ]
+    const patientByMonth = new Map<number, { size: number; date: string }>()
+    patientByMonth.set(0, { size: birthSize, date: format(patient.birthDate, "MMM d, yyyy") })
+    measurementsWithAge.forEach((m) => patientByMonth.set(m.ageInMonths, { size: m.size, date: m.date }))
 
     const patientAgeNow = differenceInMonths(new Date(), patient.birthDate)
     const lastMeasurementAge = measurementsWithAge.length > 0
@@ -87,11 +86,19 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
     const clampedMaxAge = Math.max(lastMeasurementAge, patientAgeNow, 6) + 2
     const ticks = Array.from({ length: clampedMaxAge + 1 }, (_, i) => i)
 
-    const referenceData = referenceCurves
-      .filter((r) => r.month <= clampedMaxAge)
-      .map((r) => ({ ageInMonths: r.month, ...r }))
+    const refByMonth = new Map(referenceCurves.map((r) => [r.month, r]))
 
-    return { patientData, referenceData, clampedMaxAge, ticks }
+    const chartData = ticks.map((month) => {
+      const ref = refByMonth.get(month)
+      const pat = patientByMonth.get(month)
+      return {
+        ageInMonths: month,
+        ...(ref ? { p3: ref.p3, p15: ref.p15, p50: ref.p50, p85: ref.p85, p97: ref.p97 } : {}),
+        ...(pat ? { size: pat.size, date: pat.date } : {}),
+      }
+    })
+
+    return { chartData, clampedMaxAge, ticks }
   }, [patient, referenceCurves])
 
   if (patient.measurements.length === 0) {
@@ -124,7 +131,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
       <CardContent>
         <div className="h-[250px] md:h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+            <LineChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis
                 dataKey="ageInMonths"
@@ -155,7 +162,6 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
               {REFERENCE_LINES.map(({ key, label, color, dash }) => (
                 <Line
                   key={key}
-                  data={referenceData}
                   type="monotone"
                   dataKey={key}
                   stroke={color}
@@ -163,16 +169,17 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
                   strokeDasharray={dash}
                   dot={false}
                   name={label}
+                  connectNulls
                 />
               ))}
 
               <Line
-                data={patientData}
                 type="monotone"
                 dataKey="size"
                 stroke="#14b8a6"
                 strokeWidth={3}
                 name="Patient"
+                connectNulls={false}
                 activeDot={{ r: 8, stroke: "#0d9488", strokeWidth: 2, fill: "#fff" }}
                 dot={{ stroke: "#0d9488", strokeWidth: 2, r: 4, fill: "#fff" }}
               />
@@ -190,20 +197,20 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
                 </div>
                 <div className="border-l border-gray-200 pl-4">
                   <p className="text-sm font-medium text-gray-700">Birth Size (Estimated)</p>
-                  <p className="text-lg font-semibold text-gray-800">{patientData[0].size.toFixed(1)} cm</p>
+                  <p className="text-lg font-semibold text-gray-800">{chartData[0].size?.toFixed(1)} cm</p>
                 </div>
               </div>
             ) : (
               <>
                 <p className="text-sm font-medium text-gray-700">Birth Size (Estimated)</p>
-                <p className="text-lg font-semibold text-gray-800">{patientData[0].size.toFixed(1)} cm</p>
+                <p className="text-lg font-semibold text-gray-800">{chartData[0].size?.toFixed(1)} cm</p>
               </>
             )}
           </div>
           <div className="bg-gradient-secondary p-3 rounded-lg">
             <p className="text-sm font-medium text-gray-700">Current Size</p>
             <p className="text-lg font-semibold text-gray-800">
-              {patientData[patientData.length - 1].size.toFixed(1)} cm
+              {[...chartData].reverse().find((d) => d.size != null)?.size?.toFixed(1)} cm
             </p>
           </div>
         </div>
