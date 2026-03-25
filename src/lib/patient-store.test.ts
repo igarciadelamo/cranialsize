@@ -3,8 +3,8 @@ import { act } from "react"
 import { usePatientStore } from "./patient-store"
 
 vi.mock("./api-service", () => ({
-  patientService: { getAll: vi.fn() },
-  measurementService: { getAll: vi.fn(), create: vi.fn() },
+  patientService: { getAll: vi.fn(), patch: vi.fn(), delete: vi.fn() },
+  measurementService: { getAll: vi.fn(), create: vi.fn(), delete: vi.fn() },
 }))
 
 vi.mock("sonner", () => ({
@@ -221,5 +221,186 @@ describe("addMeasurement", () => {
     expect(measurementService.create).toHaveBeenCalledOnce()
     const patient = usePatientStore.getState().patients.find((p) => p.id === "real-1")
     expect(patient?.measurements[0].id).toBe("m-new")
+  })
+})
+
+describe("editPatient", () => {
+  it("calls patientService.patch with the correct payload", async () => {
+    const { patientService } = await import("./api-service")
+    vi.mocked(patientService.patch).mockResolvedValueOnce({
+      id: "p1", firstName: "Sophia", lastName: "Doe",
+      birthDate: "2022-03-15", sex: "F",
+      birthHeadCircumference: null, userId: null, createdAt: "", measurementCount: 0,
+    })
+
+    usePatientStore.setState({
+      patients: [{ id: "p1", firstName: "Emma", lastName: "Doe", birthDate: new Date("2022-03-15"), sex: "F" as const, measurements: [] }],
+    })
+
+    await act(async () => {
+      await usePatientStore.getState().editPatient("token", "p1", { firstName: "Sophia" })
+    })
+
+    expect(patientService.patch).toHaveBeenCalledWith("token", "p1", expect.objectContaining({ firstName: "Sophia" }))
+  })
+
+  it("updates the patient in the store after successful patch", async () => {
+    const { patientService } = await import("./api-service")
+    vi.mocked(patientService.patch).mockResolvedValueOnce({
+      id: "p1", firstName: "Sophia", lastName: "Doe",
+      birthDate: "2022-03-15", sex: "F",
+      birthHeadCircumference: null, userId: null, createdAt: "", measurementCount: 0,
+    })
+
+    usePatientStore.setState({
+      patients: [{ id: "p1", firstName: "Emma", lastName: "Doe", birthDate: new Date("2022-03-15"), sex: "F" as const, measurements: [] }],
+    })
+
+    await act(async () => {
+      await usePatientStore.getState().editPatient("token", "p1", { firstName: "Sophia" })
+    })
+
+    const patient = usePatientStore.getState().patients.find((p) => p.id === "p1")
+    expect(patient?.firstName).toBe("Sophia")
+  })
+
+  it("formats birthDate as yyyy-MM-dd in the payload", async () => {
+    const { patientService } = await import("./api-service")
+    vi.mocked(patientService.patch).mockResolvedValueOnce({
+      id: "p1", firstName: "Emma", lastName: "Doe",
+      birthDate: "2022-03-15", sex: "F",
+      birthHeadCircumference: null, userId: null, createdAt: "", measurementCount: 0,
+    })
+
+    usePatientStore.setState({
+      patients: [{ id: "p1", firstName: "Emma", lastName: "Doe", birthDate: new Date("2022-03-15"), sex: "F" as const, measurements: [] }],
+    })
+
+    await act(async () => {
+      await usePatientStore.getState().editPatient("token", "p1", { birthDate: new Date("2022-03-15") })
+    })
+
+    expect(patientService.patch).toHaveBeenCalledWith("token", "p1", expect.objectContaining({ birthDate: "2022-03-15" }))
+  })
+
+  it("sends null for birthHeadCircumference when explicitly cleared", async () => {
+    const { patientService } = await import("./api-service")
+    vi.mocked(patientService.patch).mockResolvedValueOnce({
+      id: "p1", firstName: "Emma", lastName: "Doe",
+      birthDate: "2022-03-15", sex: "F",
+      birthHeadCircumference: null, userId: null, createdAt: "", measurementCount: 0,
+    })
+
+    usePatientStore.setState({
+      patients: [{ id: "p1", firstName: "Emma", lastName: "Doe", birthDate: new Date(), sex: "F" as const, birthHeadCircumference: 34.5, measurements: [] }],
+    })
+
+    await act(async () => {
+      await usePatientStore.getState().editPatient("token", "p1", { birthHeadCircumference: null })
+    })
+
+    expect(patientService.patch).toHaveBeenCalledWith("token", "p1", expect.objectContaining({ birthHeadCircumference: null }))
+    const patient = usePatientStore.getState().patients.find((p) => p.id === "p1")
+    expect(patient?.birthHeadCircumference).toBeUndefined()
+  })
+})
+
+describe("deletePatient", () => {
+  it("calls patientService.delete with the correct ids", async () => {
+    const { patientService } = await import("./api-service")
+    vi.mocked(patientService.delete).mockResolvedValueOnce(undefined)
+
+    usePatientStore.setState({
+      patients: [{ id: "p1", firstName: "Emma", lastName: "Doe", birthDate: new Date(), sex: "F" as const, measurements: [] }],
+    })
+
+    await act(async () => {
+      await usePatientStore.getState().deletePatient("token", "p1")
+    })
+
+    expect(patientService.delete).toHaveBeenCalledWith("token", "p1")
+  })
+
+  it("removes the patient from the store after delete", async () => {
+    const { patientService } = await import("./api-service")
+    vi.mocked(patientService.delete).mockResolvedValueOnce(undefined)
+
+    usePatientStore.setState({
+      patients: [
+        { id: "p1", firstName: "Emma", lastName: "Doe", birthDate: new Date(), sex: "F" as const, measurements: [] },
+        { id: "p2", firstName: "Noah", lastName: "Smith", birthDate: new Date(), sex: "M" as const, measurements: [] },
+      ],
+    })
+
+    await act(async () => {
+      await usePatientStore.getState().deletePatient("token", "p1")
+    })
+
+    const patients = usePatientStore.getState().patients
+    expect(patients.find((p) => p.id === "p1")).toBeUndefined()
+    expect(patients.find((p) => p.id === "p2")).toBeDefined()
+  })
+})
+
+describe("deleteMeasurement", () => {
+  it("calls measurementService.delete with the correct ids", async () => {
+    const { measurementService } = await import("./api-service")
+    vi.mocked(measurementService.delete).mockResolvedValueOnce(undefined)
+
+    usePatientStore.setState({
+      patients: [{
+        id: "p1", firstName: "Emma", lastName: "Doe", birthDate: new Date(), sex: "F" as const,
+        measurements: [{ id: "m1", date: new Date(), size: 42 }],
+      }],
+    })
+
+    await act(async () => {
+      await usePatientStore.getState().deleteMeasurement("token", "p1", "m1")
+    })
+
+    expect(measurementService.delete).toHaveBeenCalledWith("token", "p1", "m1")
+  })
+
+  it("removes the measurement from the patient's list", async () => {
+    const { measurementService } = await import("./api-service")
+    vi.mocked(measurementService.delete).mockResolvedValueOnce(undefined)
+
+    usePatientStore.setState({
+      patients: [{
+        id: "p1", firstName: "Emma", lastName: "Doe", birthDate: new Date(), sex: "F" as const,
+        measurements: [
+          { id: "m1", date: new Date("2024-04-01"), size: 40 },
+          { id: "m2", date: new Date("2024-07-01"), size: 43 },
+        ],
+      }],
+    })
+
+    await act(async () => {
+      await usePatientStore.getState().deleteMeasurement("token", "p1", "m1")
+    })
+
+    const patient = usePatientStore.getState().patients.find((p) => p.id === "p1")
+    expect(patient?.measurements.find((m) => m.id === "m1")).toBeUndefined()
+    expect(patient?.measurements.find((m) => m.id === "m2")).toBeDefined()
+  })
+
+  it("decrements measurementCount after delete", async () => {
+    const { measurementService } = await import("./api-service")
+    vi.mocked(measurementService.delete).mockResolvedValueOnce(undefined)
+
+    usePatientStore.setState({
+      patients: [{
+        id: "p1", firstName: "Emma", lastName: "Doe", birthDate: new Date(), sex: "F" as const,
+        measurementCount: 3,
+        measurements: [{ id: "m1", date: new Date(), size: 42 }],
+      }],
+    })
+
+    await act(async () => {
+      await usePatientStore.getState().deleteMeasurement("token", "p1", "m1")
+    })
+
+    const patient = usePatientStore.getState().patients.find((p) => p.id === "p1")
+    expect(patient?.measurementCount).toBe(2)
   })
 })

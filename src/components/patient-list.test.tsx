@@ -1,11 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import PatientList from "./patient-list"
 
 const mockUsePatientStore = vi.fn()
 vi.mock("@/lib/patient-store", () => ({
   usePatientStore: (...args: any[]) => mockUsePatientStore(...args),
+}))
+
+vi.mock("@/lib/auth-context", () => ({
+  useAuth: () => ({ accessToken: "mock-token" }),
+}))
+
+vi.mock("@/components/edit-patient-dialog", () => ({
+  default: ({ open, patient }: { open: boolean; patient: { firstName: string } }) =>
+    open ? <div data-testid="edit-dialog">{patient.firstName}</div> : null,
 }))
 
 const mockPatients = [
@@ -32,9 +41,11 @@ function renderList() {
   return render(<PatientList onPatientSelect={mockOnPatientSelect} onAddNewPatient={mockOnAddNewPatient} />)
 }
 
+const mockDeletePatient = vi.fn().mockResolvedValue(undefined)
+
 beforeEach(() => {
   vi.clearAllMocks()
-  mockUsePatientStore.mockReturnValue({ patients: mockPatients, isLoading: false })
+  mockUsePatientStore.mockReturnValue({ patients: mockPatients, isLoading: false, deletePatient: mockDeletePatient })
 })
 
 describe("PatientList", () => {
@@ -116,5 +127,74 @@ describe("PatientList", () => {
     const emmaAfter = screen.getByText(/emma johnson/i)
     const noahAfter = screen.getByText(/noah williams/i)
     expect(noahAfter.compareDocumentPosition(emmaAfter) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+})
+
+describe("PatientList — edit and delete actions", () => {
+  it("opens edit dialog when pencil icon is clicked", async () => {
+    renderList()
+    const editButtons = screen.getAllByRole("button", { name: "" }).filter((btn) =>
+      btn.querySelector("svg")
+    )
+    // First patient's edit button (pencil) is first icon button on first row
+    const pencilButtons = screen.getAllByRole("button").filter((btn) =>
+      btn.querySelector(".lucide-pencil")
+    )
+    await userEvent.click(pencilButtons[0])
+    expect(screen.getByTestId("edit-dialog")).toBeInTheDocument()
+    expect(screen.getByTestId("edit-dialog")).toHaveTextContent("Emma")
+  })
+
+  it("does not navigate to patient detail when edit button is clicked", async () => {
+    renderList()
+    const pencilButtons = screen.getAllByRole("button").filter((btn) =>
+      btn.querySelector(".lucide-pencil")
+    )
+    await userEvent.click(pencilButtons[0])
+    expect(mockOnPatientSelect).not.toHaveBeenCalled()
+  })
+
+  it("opens delete confirmation when trash icon is clicked", async () => {
+    renderList()
+    const trashButtons = screen.getAllByRole("button").filter((btn) =>
+      btn.querySelector(".lucide-trash-2")
+    )
+    await userEvent.click(trashButtons[0])
+    expect(screen.getByText(/delete patient\?/i)).toBeInTheDocument()
+    expect(screen.getByText(/this will permanently delete/i)).toBeInTheDocument()
+  })
+
+  it("does not navigate to patient detail when delete button is clicked", async () => {
+    renderList()
+    const trashButtons = screen.getAllByRole("button").filter((btn) =>
+      btn.querySelector(".lucide-trash-2")
+    )
+    await userEvent.click(trashButtons[0])
+    expect(mockOnPatientSelect).not.toHaveBeenCalled()
+  })
+
+  it("calls deletePatient and closes dialog when Delete is confirmed", async () => {
+    renderList()
+    const trashButtons = screen.getAllByRole("button").filter((btn) =>
+      btn.querySelector(".lucide-trash-2")
+    )
+    await userEvent.click(trashButtons[0])
+    await userEvent.click(screen.getByRole("button", { name: /^delete$/i }))
+    await waitFor(() => {
+      expect(mockDeletePatient).toHaveBeenCalledWith("mock-token", "1")
+    })
+  })
+
+  it("closes delete dialog without calling deletePatient when Cancel is clicked", async () => {
+    renderList()
+    const trashButtons = screen.getAllByRole("button").filter((btn) =>
+      btn.querySelector(".lucide-trash-2")
+    )
+    await userEvent.click(trashButtons[0])
+    await userEvent.click(screen.getByRole("button", { name: /cancel/i }))
+    await waitFor(() => {
+      expect(screen.queryByText(/delete patient\?/i)).not.toBeInTheDocument()
+    })
+    expect(mockDeletePatient).not.toHaveBeenCalled()
   })
 })
