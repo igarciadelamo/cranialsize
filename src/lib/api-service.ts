@@ -106,6 +106,23 @@ export const measurementService = {
   },
 }
 
+export interface ReferencePoint {
+  month: number
+  p3: number
+  p15: number
+  p50: number
+  p85: number
+  p97: number
+}
+
+export const referenceService = {
+  async getHeadCircumferenceCurves(sex: "M" | "F"): Promise<ReferencePoint[]> {
+    const response = await fetch(`${API_BASE_URL}/reference/head-circumference?sex=${sex}`)
+    if (!response.ok) throw new Error(`${response.status}`)
+    return response.json()
+  },
+}
+
 export const userService = {
   async doLogin(idToken: string): Promise<UserResponse> {
     const response = await fetch(`${API_BASE_URL}/users/login`, {
