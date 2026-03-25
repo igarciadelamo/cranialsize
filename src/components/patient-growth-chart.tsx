@@ -68,16 +68,20 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
     referenceService.getHeadCircumferenceCurves(patient.sex).then(setReferenceCurves).catch(() => {})
   }, [patient.sex])
 
-  const { patientData, clampedMaxAge, ticks } = useMemo(() => {
+  const { patientData, estimatedBirthSize, clampedMaxAge, ticks } = useMemo(() => {
     const sorted = [...patient.measurements].sort((a, b) => a.date.getTime() - b.date.getTime())
 
-    const birthSize =
+    const estimatedBirthSize =
       sorted.length > 0
         ? calculateEstimatedBirthSizeFromMeasurements(sorted, patient.birthDate)
         : 35
 
+    const birthPoint = patient.birthHeadCircumference
+      ? [{ ageInMonths: 0, size: patient.birthHeadCircumference, date: format(patient.birthDate, "MMM d, yyyy") }]
+      : []
+
     const patientData = [
-      { ageInMonths: 0, size: birthSize, date: format(patient.birthDate, "MMM d, yyyy") },
+      ...birthPoint,
       ...sorted.map((m) => ({
         ageInMonths: decimalMonths(m.date, patient.birthDate),
         size: m.size,
@@ -90,7 +94,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
     const clampedMaxAge = Math.ceil(Math.max(lastMeasurementAge, patientAgeNow, 6)) + 2
     const ticks = Array.from({ length: clampedMaxAge + 1 }, (_, i) => i)
 
-    return { patientData, clampedMaxAge, ticks }
+    return { patientData, estimatedBirthSize, clampedMaxAge, ticks }
   }, [patient])
 
   const referenceData = useMemo(
@@ -196,13 +200,13 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
                 </div>
                 <div className="border-l border-gray-200 pl-4">
                   <p className="text-sm font-medium text-gray-700">Birth Size (Estimated)</p>
-                  <p className="text-lg font-semibold text-gray-800">{patientData[0].size.toFixed(1)} cm</p>
+                  <p className="text-lg font-semibold text-gray-800">{estimatedBirthSize.toFixed(1)} cm</p>
                 </div>
               </div>
             ) : (
               <>
                 <p className="text-sm font-medium text-gray-700">Birth Size (Estimated)</p>
-                <p className="text-lg font-semibold text-gray-800">{patientData[0].size.toFixed(1)} cm</p>
+                <p className="text-lg font-semibold text-gray-800">{estimatedBirthSize.toFixed(1)} cm</p>
               </>
             )}
           </div>
