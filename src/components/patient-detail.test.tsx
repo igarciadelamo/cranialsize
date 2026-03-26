@@ -13,7 +13,13 @@ vi.mock("@/lib/auth-context", () => ({
 }))
 
 const mockLoadMeasurements = vi.fn()
+const mockDeleteMeasurement = vi.fn()
 const mockUsePatientStore = vi.fn()
+vi.mock("@/components/edit-measurement-dialog", () => ({
+  default: ({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) =>
+    open ? <div data-testid="edit-measurement-dialog"><button onClick={() => onOpenChange(false)}>CloseEdit</button></div> : null,
+}))
+
 vi.mock("@/lib/patient-store", () => ({
   usePatientStore: (...args: any[]) => mockUsePatientStore(...args),
 }))
@@ -43,6 +49,7 @@ beforeEach(() => {
     patients: [mockPatient],
     loadMeasurements: mockLoadMeasurements,
     isMeasurementsLoading: false,
+    deleteMeasurement: mockDeleteMeasurement,
   })
 })
 
@@ -101,7 +108,7 @@ describe("PatientDetail", () => {
     expect(mockOnAddMeasurement).toHaveBeenCalledOnce()
   })
 
-  it("opens measurement detail dialog when a measurement is clicked", async () => {
+  it("shows edit and delete buttons per measurement row", async () => {
     const patientWithMeasurements = {
       ...mockPatient,
       measurements: [{ id: "m1", date: new Date("2024-07-01"), size: 42.5, percentile: "25th-75th" }],
@@ -110,14 +117,15 @@ describe("PatientDetail", () => {
       patients: [patientWithMeasurements],
       loadMeasurements: mockLoadMeasurements,
       isMeasurementsLoading: false,
+      deleteMeasurement: mockDeleteMeasurement,
     })
     renderDetail(patientWithMeasurements)
     await userEvent.click(screen.getByRole("tab", { name: /measurement history/i }))
-    await userEvent.click(screen.getByText(/42\.5 cm/i))
-    expect(screen.getByText(/measurement details/i)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /edit measurement/i })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /delete measurement/i })).toBeInTheDocument()
   })
 
-  it("closes measurement detail dialog when close button is clicked", async () => {
+  it("opens edit dialog when pencil button is clicked", async () => {
     const patientWithMeasurements = {
       ...mockPatient,
       measurements: [{ id: "m1", date: new Date("2024-07-01"), size: 42.5, percentile: "25th-75th" }],
@@ -126,12 +134,46 @@ describe("PatientDetail", () => {
       patients: [patientWithMeasurements],
       loadMeasurements: mockLoadMeasurements,
       isMeasurementsLoading: false,
+      deleteMeasurement: mockDeleteMeasurement,
     })
     renderDetail(patientWithMeasurements)
     await userEvent.click(screen.getByRole("tab", { name: /measurement history/i }))
-    await userEvent.click(screen.getByText(/42\.5 cm/i))
-    const closeButtons = screen.getAllByRole("button", { name: /close/i })
-    await userEvent.click(closeButtons[closeButtons.length - 1])
-    expect(screen.queryByText(/measurement details/i)).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole("button", { name: /edit measurement/i }))
+    expect(screen.getByTestId("edit-measurement-dialog")).toBeInTheDocument()
+  })
+
+  it("opens delete confirm when trash button is clicked", async () => {
+    const patientWithMeasurements = {
+      ...mockPatient,
+      measurements: [{ id: "m1", date: new Date("2024-07-01"), size: 42.5, percentile: "25th-75th" }],
+    }
+    mockUsePatientStore.mockReturnValue({
+      patients: [patientWithMeasurements],
+      loadMeasurements: mockLoadMeasurements,
+      isMeasurementsLoading: false,
+      deleteMeasurement: mockDeleteMeasurement,
+    })
+    renderDetail(patientWithMeasurements)
+    await userEvent.click(screen.getByRole("tab", { name: /measurement history/i }))
+    await userEvent.click(screen.getByRole("button", { name: /delete measurement/i }))
+    expect(screen.getByText(/delete measurement\?/i)).toBeInTheDocument()
+  })
+
+  it("calls deleteMeasurement when confirm delete is clicked", async () => {
+    const patientWithMeasurements = {
+      ...mockPatient,
+      measurements: [{ id: "m1", date: new Date("2024-07-01"), size: 42.5, percentile: "25th-75th" }],
+    }
+    mockUsePatientStore.mockReturnValue({
+      patients: [patientWithMeasurements],
+      loadMeasurements: mockLoadMeasurements,
+      isMeasurementsLoading: false,
+      deleteMeasurement: mockDeleteMeasurement,
+    })
+    renderDetail(patientWithMeasurements)
+    await userEvent.click(screen.getByRole("tab", { name: /measurement history/i }))
+    await userEvent.click(screen.getByRole("button", { name: /delete measurement/i }))
+    await userEvent.click(screen.getByRole("button", { name: /^delete$/i }))
+    expect(mockDeleteMeasurement).toHaveBeenCalledWith("mock-token", "real-1", "m1")
   })
 })
