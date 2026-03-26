@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { calculateAge, formatDate, cn } from "./utils"
+import { calculateAge, formatDate, formatDateTime, cn } from "./utils"
 
 describe("calculateAge", () => {
   it("returns '< 1 month' for less than 1 month old", () => {
@@ -44,6 +44,18 @@ describe("formatDate", () => {
   it("formats date correctly", () => {
     const date = new Date("2024-03-15")
     expect(formatDate(date)).toBe("Mar 15, 2024")
+  })
+})
+
+describe("formatDateTime", () => {
+  it("formats time as h:mm a", () => {
+    const date = new Date(2024, 2, 15, 14, 30) // 2:30 PM local
+    expect(formatDateTime(date)).toBe("2:30 PM")
+  })
+
+  it("formats midnight as 12:00 AM", () => {
+    const date = new Date(2024, 2, 15, 0, 0)
+    expect(formatDateTime(date)).toBe("12:00 AM")
   })
 })
 
