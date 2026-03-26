@@ -439,4 +439,29 @@ describe("editMeasurement", () => {
     expect(patient?.measurements[0].size).toBe(43.5)
     expect(patient?.measurements[0].percentile).toBe("P75")
   })
+
+  it("sorts measurements by date descending after editing", async () => {
+    const { measurementService } = await import("./api-service")
+    const newerDate = new Date("2024-09-01")
+    vi.mocked(measurementService.patch).mockResolvedValueOnce({
+      id: "m2", patientId: "real-1", measuredAt: "2024-09-01T00:00:00.000Z",
+      headCircumference: 41.0, createdAt: "", percentile: "P25",
+    })
+    usePatientStore.setState({
+      patients: [{
+        id: "real-1", firstName: "John", lastName: "Doe", birthDate: new Date("2024-01-01"),
+        sex: "M" as const, measurements: [
+          { id: "m1", date: new Date("2024-07-01"), size: 43.0 },
+          { id: "m2", date: new Date("2024-04-01"), size: 41.0 },
+        ],
+      }],
+    })
+    await act(async () => {
+      await usePatientStore.getState().editMeasurement("token", "real-1", "m2", { date: newerDate })
+    })
+    const patient = usePatientStore.getState().patients.find((p) => p.id === "real-1")
+    // m2 now has date 2024-09-01 which is newer than m1's 2024-07-01, so m2 should be first
+    expect(patient?.measurements[0].id).toBe("m2")
+    expect(patient?.measurements[1].id).toBe("m1")
+  })
 })

@@ -1,3 +1,4 @@
+import React from "react"
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
@@ -21,11 +22,37 @@ vi.mock("@/lib/api-service", () => ({
   },
 }))
 
+vi.mock("sonner", () => ({
+  toast: { error: vi.fn() },
+}))
+
+vi.mock("@/components/ui/popover", () => ({
+  Popover: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  PopoverTrigger: ({ children }: { children: React.ReactElement; asChild?: boolean }) =>
+    React.cloneElement(children, { type: "button" } as React.HTMLAttributes<HTMLButtonElement>),
+  PopoverContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
+
+vi.mock("@/components/ui/calendar", () => ({
+  Calendar: ({ onChange }: { onChange: (date: Date) => void }) => (
+    <button type="button" onClick={() => onChange(new Date("2022-01-15"))}>Select date</button>
+  ),
+}))
+
 const mockOnCancel = vi.fn()
 const mockOnComplete = vi.fn()
 
 function renderForm() {
-  return render(<NewPatientForm onCancel={mockOnCancel} onComplete={mockOnComplete} />)
+  const result = render(<NewPatientForm onCancel={mockOnCancel} onComplete={mockOnComplete} />)
+  return result
+}
+
+async function fillAndSubmitForm() {
+  await userEvent.type(screen.getByLabelText(/first name/i), "Jane")
+  await userEvent.type(screen.getByLabelText(/last name/i), "Smith")
+  await userEvent.click(screen.getByRole("button", { name: /^female$/i }))
+  await userEvent.click(screen.getByRole("button", { name: /select date/i }))
+  await userEvent.click(screen.getByRole("button", { name: /save patient/i }))
 }
 
 beforeEach(() => {
@@ -99,6 +126,70 @@ describe("NewPatientForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /save patient/i }))
 
     await waitFor(() => {
+      expect(mockOnComplete).not.toHaveBeenCalled()
+    })
+  })
+
+  it("selects sex Male and clears sex error", async () => {
+    renderForm()
+    fireEvent.click(screen.getByRole("button", { name: /save patient/i }))
+    await waitFor(() => {
+      expect(screen.getByText(/sex is required/i)).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByRole("button", { name: /^male$/i }))
+    await waitFor(() => {
+      expect(screen.queryByText(/sex is required/i)).not.toBeInTheDocument()
+    })
+  })
+
+  it("selects sex Female and clears sex error", async () => {
+    renderForm()
+    fireEvent.click(screen.getByRole("button", { name: /save patient/i }))
+    await waitFor(() => {
+      expect(screen.getByText(/sex is required/i)).toBeInTheDocument()
+    })
+    await userEvent.click(screen.getByRole("button", { name: /^female$/i }))
+    await waitFor(() => {
+      expect(screen.queryByText(/sex is required/i)).not.toBeInTheDocument()
+    })
+  })
+
+  it("calls onComplete and addPatient on successful submit", async () => {
+    const { patientService } = await import("@/lib/api-service")
+    vi.mocked(patientService.create).mockReset()
+    vi.mocked(patientService.create).mockResolvedValueOnce({
+      id: "new-1",
+      firstName: "Jane",
+      lastName: "Smith",
+      birthDate: "2022-01-15",
+      sex: "F",
+      birthHeadCircumference: null,
+      userId: null,
+      createdAt: "",
+      measurementCount: 0,
+    })
+
+    renderForm()
+    await fillAndSubmitForm()
+
+    await waitFor(() => expect(patientService.create).toHaveBeenCalled())
+    await waitFor(() => {
+      expect(mockOnComplete).toHaveBeenCalledOnce()
+      expect(mockAddPatient).toHaveBeenCalledOnce()
+    })
+  })
+
+  it("shows error toast on API failure after all fields filled", async () => {
+    const { patientService } = await import("@/lib/api-service")
+    const { toast } = await import("sonner")
+    vi.mocked(patientService.create).mockReset()
+    vi.mocked(patientService.create).mockRejectedValueOnce(new Error("500"))
+
+    renderForm()
+    await fillAndSubmitForm()
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledOnce()
       expect(mockOnComplete).not.toHaveBeenCalled()
     })
   })
