@@ -56,6 +56,20 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 Add `http://localhost:3000` to **Authorized JavaScript origins** in your OAuth 2.0 Client ID for local development.
 
+## Testing
+
+Run the test suite:
+```bash
+npm test
+```
+
+Run with coverage report:
+```bash
+npx vitest run --coverage
+```
+
+Tests use Vitest + @testing-library/react with a happy-dom environment. No backend or external services required.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

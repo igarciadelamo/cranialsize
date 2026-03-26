@@ -1,3 +1,4 @@
+import EditMeasurementDialog from "@/components/edit-measurement-dialog"
 import PatientGrowthChart from "@/components/patient-growth-chart"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,21 +12,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Measurement, Patient } from "@/lib/types"
-import { calculateAge, formatDate, formatDateTime } from "@/lib/utils"
+import { calculateAge, formatDate } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
 import { usePatientStore } from "@/lib/patient-store"
 import { motion } from "framer-motion"
-import { Calendar, Clock, Plus, Ruler, Trash2, X } from "lucide-react"
+import { Calendar, Pencil, Plus, Ruler, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
 interface PatientDetailProps {
@@ -37,6 +30,7 @@ interface PatientDetailProps {
 export default function PatientDetail({ patient: patientProp, onBack, onAddMeasurement }: PatientDetailProps) {
   const [selectedMeasurement, setSelectedMeasurement] = useState<Measurement | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
   const { accessToken } = useAuth()
   const { patients, loadMeasurements, isMeasurementsLoading, deleteMeasurement } = usePatientStore()
@@ -47,14 +41,6 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
       loadMeasurements(accessToken, patientProp.id)
     }
   }, [patientProp.id, accessToken])
-
-  const handleMeasurementClick = (measurement: Measurement) => {
-    setSelectedMeasurement(measurement)
-  }
-
-  const handleCloseDialog = () => {
-    setSelectedMeasurement(null)
-  }
 
   const handleDeleteMeasurement = async () => {
     if (!selectedMeasurement?.id || !accessToken) return
@@ -143,15 +129,15 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                       <div className="col-span-3">Date</div>
                       <div className="col-span-3">Age at Measure</div>
                       <div className="col-span-3">Measurement</div>
-                      <div className="col-span-3">Percentile</div>
+                      <div className="col-span-2">Percentile</div>
+                      <div className="col-span-1"></div>
                     </div>
 
                     <div className="divide-y">
                       {patient.measurements.map((measurement, index) => (
                         <div
                           key={measurement.id ?? index}
-                          className="grid grid-cols-12 p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                          onClick={() => handleMeasurementClick(measurement)}
+                          className="grid grid-cols-12 p-4 hover:bg-gray-50 transition-colors items-center"
                         >
                           <div className="col-span-3 text-gray-600">{formatDate(measurement.date)}</div>
                           <div className="col-span-3 text-gray-600">
@@ -161,10 +147,26 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                             <Ruler className="h-4 w-4 mr-2 text-teal-600" />
                             {measurement.size.toFixed(1)} cm
                           </div>
-                          <div className="col-span-3 text-gray-600">
+                          <div className="col-span-2 text-gray-600">
                             <span className="pill-badge pill-badge-primary">
                               {measurement.percentile ?? "—"}
                             </span>
+                          </div>
+                          <div className="col-span-1 flex gap-1 justify-end">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setSelectedMeasurement(measurement); setShowEditDialog(true) }}
+                              className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-teal-600 transition-colors"
+                              aria-label="Edit measurement"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setSelectedMeasurement(measurement); setShowDeleteConfirm(true) }}
+                              className="p-1.5 rounded-md hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                              aria-label="Delete measurement"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -195,82 +197,14 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
         </Card>
       </motion.div>
 
-      {/* Measurement Detail Dialog */}
-      <Dialog open={!!selectedMeasurement} onOpenChange={handleCloseDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Measurement Details</DialogTitle>
-            <DialogDescription>
-              Detailed information about the measurement taken on{" "}
-              {selectedMeasurement && formatDate(selectedMeasurement.date)}.
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedMeasurement && (() => {
-            return (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gradient-secondary p-3 rounded-lg">
-                  <p className="text-xs text-gray-500">Measurement Date</p>
-                  <p className="text-sm font-medium text-gray-800 flex items-center">
-                    <Calendar className="h-4 w-4 mr-1 text-teal-600" />
-                    {formatDate(selectedMeasurement.date)}
-                  </p>
-                </div>
-                <div className="bg-gradient-secondary p-3 rounded-lg">
-                  <p className="text-xs text-gray-500">Time Recorded</p>
-                  <p className="text-sm font-medium text-gray-800 flex items-center">
-                    <Clock className="h-4 w-4 mr-1 text-teal-600" />
-                    {formatDateTime(selectedMeasurement.date)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-teal-50 p-4 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-xs text-gray-500">Measurement</p>
-                    <p className="text-lg font-semibold text-gray-800 flex items-center">
-                      <Ruler className="h-4 w-4 mr-1 text-teal-600" />
-                      {selectedMeasurement.size.toFixed(1)} cm
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500">Percentile</p>
-                    <p className="text-sm font-medium">
-                      <span className="pill-badge pill-badge-primary">
-                        {selectedMeasurement.percentile ?? "—"}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700">Analysis</p>
-                <div className="bg-white border p-3 rounded-lg space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Age at Measurement:</span>
-                    <span className="font-medium">{calculateAge(patient.birthDate, selectedMeasurement.date)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            )
-          })()}
-
-          <DialogFooter className="sm:justify-between">
-            <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </Button>
-            <Button variant="outline" onClick={handleCloseDialog}>
-              <X className="h-4 w-4 mr-2" />
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {selectedMeasurement && (
+        <EditMeasurementDialog
+          patientId={patient.id}
+          measurement={selectedMeasurement}
+          open={showEditDialog}
+          onOpenChange={(open) => { setShowEditDialog(open); if (!open) setSelectedMeasurement(null) }}
+        />
+      )}
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>

@@ -5,6 +5,11 @@ export interface Measurement {
   percentile?: string
 }
 
+export interface UpdateMeasurementData {
+  date?: Date
+  size?: number
+}
+
 export interface UpdatePatientData {
   firstName?: string
   lastName?: string

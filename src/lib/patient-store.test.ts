@@ -4,7 +4,7 @@ import { usePatientStore } from "./patient-store"
 
 vi.mock("./api-service", () => ({
   patientService: { getAll: vi.fn(), patch: vi.fn(), delete: vi.fn() },
-  measurementService: { getAll: vi.fn(), create: vi.fn(), delete: vi.fn() },
+  measurementService: { getAll: vi.fn(), create: vi.fn(), patch: vi.fn(), delete: vi.fn() },
 }))
 
 vi.mock("sonner", () => ({
@@ -402,5 +402,41 @@ describe("deleteMeasurement", () => {
 
     const patient = usePatientStore.getState().patients.find((p) => p.id === "p1")
     expect(patient?.measurementCount).toBe(2)
+  })
+})
+
+describe("editMeasurement", () => {
+  it("calls measurementService.patch with formatted date and size", async () => {
+    const { measurementService } = await import("./api-service")
+    vi.mocked(measurementService.patch).mockResolvedValueOnce({
+      id: "m1", patientId: "real-1", measuredAt: "2024-08-01T00:00:00.000Z",
+      headCircumference: 43.5, createdAt: "", percentile: "P50",
+    })
+    usePatientStore.setState({
+      patients: [{ id: "real-1", firstName: "John", lastName: "Doe", birthDate: new Date("2024-01-01"),
+        sex: "M" as const, measurements: [{ id: "m1", date: new Date("2024-07-01"), size: 42.0 }] }],
+    })
+    await act(async () => {
+      await usePatientStore.getState().editMeasurement("token", "real-1", "m1", { date: new Date("2024-08-01"), size: 43.5 })
+    })
+    expect(measurementService.patch).toHaveBeenCalledWith("token", "real-1", "m1", { measuredAt: "2024-08-01", headCircumference: 43.5 })
+  })
+
+  it("updates measurement in store with response values", async () => {
+    const { measurementService } = await import("./api-service")
+    vi.mocked(measurementService.patch).mockResolvedValueOnce({
+      id: "m1", patientId: "real-1", measuredAt: "2024-08-01T00:00:00.000Z",
+      headCircumference: 43.5, createdAt: "", percentile: "P75",
+    })
+    usePatientStore.setState({
+      patients: [{ id: "real-1", firstName: "John", lastName: "Doe", birthDate: new Date("2024-01-01"),
+        sex: "M" as const, measurements: [{ id: "m1", date: new Date("2024-07-01"), size: 42.0 }] }],
+    })
+    await act(async () => {
+      await usePatientStore.getState().editMeasurement("token", "real-1", "m1", { size: 43.5 })
+    })
+    const patient = usePatientStore.getState().patients.find((p) => p.id === "real-1")
+    expect(patient?.measurements[0].size).toBe(43.5)
+    expect(patient?.measurements[0].percentile).toBe("P75")
   })
 })
