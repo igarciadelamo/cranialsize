@@ -2,7 +2,7 @@ import { format } from "date-fns"
 import { toast } from "sonner"
 import { create } from "zustand"
 import { measurementService, patientService } from "./api-service"
-import type { Measurement, Patient, UpdatePatientData } from "./types"
+import type { Measurement, Patient, UpdateMeasurementData, UpdatePatientData } from "./types"
 
 interface PatientStore {
   patients: Patient[]
@@ -14,6 +14,7 @@ interface PatientStore {
   updatePatient: (id: string, patient: Partial<Patient>) => void
   editPatient: (token: string, patientId: string, data: UpdatePatientData) => Promise<void>
   addMeasurement: (token: string, patientId: string, measurement: Measurement) => Promise<void>
+  editMeasurement: (token: string, patientId: string, measurementId: string, data: UpdateMeasurementData) => Promise<void>
   deleteMeasurement: (token: string, patientId: string, measurementId: string) => Promise<void>
   deletePatient: (token: string, patientId: string) => Promise<void>
 }
@@ -109,6 +110,28 @@ export const usePatientStore = create<PatientStore>((set, get) => ({
     await patientService.delete(token, patientId)
     set((state) => ({
       patients: state.patients.filter((p) => p.id !== patientId),
+    }))
+  },
+
+  editMeasurement: async (token: string, patientId: string, measurementId: string, data: UpdateMeasurementData) => {
+    const payload: { measuredAt?: string; headCircumference?: number } = {}
+    if (data.date !== undefined) payload.measuredAt = format(data.date, "yyyy-MM-dd")
+    if (data.size !== undefined) payload.headCircumference = data.size
+    const updated = await measurementService.patch(token, patientId, measurementId, payload)
+    set((state) => ({
+      patients: state.patients.map((p) => {
+        if (p.id !== patientId) return p
+        return {
+          ...p,
+          measurements: p.measurements
+            .map((m) =>
+              m.id !== measurementId
+                ? m
+                : { ...m, date: new Date(updated.measuredAt), size: updated.headCircumference, percentile: updated.percentile }
+            )
+            .sort((a, b) => b.date.getTime() - a.date.getTime()),
+        }
+      }),
     }))
   },
 

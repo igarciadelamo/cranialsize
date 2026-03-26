@@ -99,6 +99,13 @@ export const measurementService = {
     })
   },
 
+  async patch(token: string, patientId: string, measurementId: string, payload: { measuredAt?: string; headCircumference?: number }): Promise<MeasurementResponse> {
+    return apiFetch(`/patients/${patientId}/measurements/${measurementId}`, token, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    })
+  },
+
   async delete(token: string, patientId: string, measurementId: string): Promise<void> {
     return apiFetch(`/patients/${patientId}/measurements/${measurementId}`, token, {
       method: "DELETE",
