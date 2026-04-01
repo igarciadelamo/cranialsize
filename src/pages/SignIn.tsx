@@ -5,10 +5,12 @@ import { useAuth } from "@/lib/auth-context"
 import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
+import { useTranslation } from "react-i18next"
 
 export default function SignIn() {
   const { login, user } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation("auth")
 
   useEffect(() => {
     if (user) navigate("/")
@@ -41,7 +43,7 @@ export default function SignIn() {
               transition={{ delay: 0.3, duration: 0.5 }}
               className="text-4xl font-bold text-gray-800 mb-4"
             >
-              CranialSize
+              {t("header.appName")}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -49,7 +51,7 @@ export default function SignIn() {
               transition={{ delay: 0.4, duration: 0.5 }}
               className="text-lg text-gray-600 mb-6"
             >
-              The professional tool for osteopaths to track and analyze infant cranial development.
+              {t("signIn.tagline")}
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -67,8 +69,8 @@ export default function SignIn() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="font-medium text-gray-800">Track Growth</p>
-                    <p className="text-sm text-gray-500">Monitor development over time</p>
+                    <p className="font-medium text-gray-800">{t("signIn.trackGrowth")}</p>
+                    <p className="text-sm text-gray-500">{t("signIn.trackGrowthDesc")}</p>
                   </div>
                 </div>
                 <div className="flex items-center">
@@ -79,8 +81,8 @@ export default function SignIn() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="font-medium text-gray-800">Patient Records</p>
-                    <p className="text-sm text-gray-500">Comprehensive data management</p>
+                    <p className="font-medium text-gray-800">{t("signIn.patientRecords")}</p>
+                    <p className="text-sm text-gray-500">{t("signIn.patientRecordsDesc")}</p>
                   </div>
                 </div>
               </div>
@@ -96,10 +98,10 @@ export default function SignIn() {
           <Card className="shadow-lg border-0 overflow-hidden">
             <div className="h-2 bg-gradient-primary"></div>
             <CardHeader className="pb-4 pt-6">
-              <CardTitle className="text-2xl font-bold text-center">Sign in to get started</CardTitle>
+              <CardTitle className="text-2xl font-bold text-center">{t("signIn.title")}</CardTitle>
             </CardHeader>
             <CardContent className="pb-6 space-y-6">
-              <p className="text-center text-gray-500">Access your patient records and measurement data securely.</p>
+              <p className="text-center text-gray-500">{t("signIn.subtitle")}</p>
 
               <div className="flex justify-center">
                 <GoogleLogin
@@ -118,7 +120,7 @@ export default function SignIn() {
 
               <div className="pt-4">
                 <p className="text-xs text-center text-gray-500">
-                  By signing in, you agree to our Terms of Service and Privacy Policy.
+                  {t("signIn.terms")}
                 </p>
               </div>
             </CardContent>

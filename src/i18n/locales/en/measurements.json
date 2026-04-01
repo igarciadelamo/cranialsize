@@ -1,0 +1,44 @@
+{
+  "form": {
+    "title": "New Measurement for {{firstName}} {{lastName}}",
+    "measurementDate": "Measurement Date",
+    "skullCircumference": "Skull Circumference (cm)",
+    "placeholder": "e.g. 35.0",
+    "rangeError": "Please enter a valid measurement between {{min}} and {{max}} cm",
+    "tipsTitle": "Measurement Tips",
+    "tip1": "Measure at the widest part of the head",
+    "tip2": "Use a flexible measuring tape",
+    "tip3": "Ensure the tape is snug but not tight",
+    "tip4": "Record to the nearest 0.1 cm",
+    "saveMeasurement": "Save Measurement",
+    "saveError": "Error saving measurement. Please try again."
+  },
+  "edit": {
+    "title": "Edit Measurement",
+    "description": "Update the measurement taken on {{date}}.",
+    "measurementDate": "Measurement Date",
+    "headCircumference": "Head Circumference (cm)",
+    "placeholder": "e.g. 42.5",
+    "dateRequired": "Date is required",
+    "sizeRequired": "Measurement is required",
+    "rangeError": "Please enter a value between {{min}} and {{max}} cm",
+    "saveChanges": "Save Changes",
+    "saveError": "Error saving measurement. Please try again."
+  },
+  "results": {
+    "title": "Measurement Results",
+    "patient": "Patient",
+    "measurementDate": "Measurement Date",
+    "ageAtMeasurement": "Age at Measurement",
+    "ageMonths": "{{months}} months",
+    "ageDays": "({{days}} days)",
+    "measuredSize": "Measured Size",
+    "expectedSize": "Expected Size (P50 WHO)",
+    "fromExpected": "{{diff}} cm from expected",
+    "birthSizeActual": "Birth Size (Actual)",
+    "birthSizeEstimated": "Birth Size (Estimated)",
+    "percentile": "Percentile (WHO)",
+    "percentileNA": "Not available",
+    "backToPatient": "Back to Patient"
+  }
+}

@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client"
 import { GoogleOAuthProvider } from "@react-oauth/google"
 import { BrowserRouter } from "react-router-dom"
 import App from "./App"
+import "./i18n"
 import "./index.css"
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || ""

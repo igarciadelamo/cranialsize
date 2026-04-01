@@ -13,6 +13,8 @@ import { format } from "date-fns"
 import { CalendarIcon, Ruler } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import { useLocalDate } from "@/i18n/use-local-date"
 
 interface SkullMeasurementFormProps {
   patient: Patient
@@ -29,6 +31,8 @@ export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: Sk
 
   const { accessToken } = useAuth()
   const { addMeasurement } = usePatientStore()
+  const { t } = useTranslation("measurements")
+  const { formatLong } = useLocalDate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,7 +41,7 @@ export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: Sk
     const numValue = parseFloat(value)
 
     if (!value || isNaN(numValue) || numValue <= HC_GENERAL_MIN || numValue > HC_GENERAL_MAX) {
-      setErrors({ currentSize: `Please enter a valid measurement between ${HC_GENERAL_MIN} and ${HC_GENERAL_MAX} cm` })
+      setErrors({ currentSize: t("form.rangeError", { min: HC_GENERAL_MIN, max: HC_GENERAL_MAX }) })
       return
     }
 
@@ -53,7 +57,7 @@ export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: Sk
       await addMeasurement(accessToken!, patient.id, newMeasurement)
       onSubmit(newMeasurement)
     } catch {
-      toast.error("Error saving measurement. Please try again.")
+      toast.error(t("form.saveError"))
     } finally {
       setIsSubmitting(false)
     }
@@ -65,13 +69,13 @@ export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: Sk
         <div className="h-2 bg-gradient-primary"></div>
         <CardHeader>
           <CardTitle className="text-xl font-bold text-gray-800">
-            New Measurement for {patient.firstName} {patient.lastName}
+            {t("form.title", { firstName: patient.firstName, lastName: patient.lastName })}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} id="measurement-form" className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="measurementDate">Measurement Date</Label>
+              <Label htmlFor="measurementDate">{t("form.measurementDate")}</Label>
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -82,7 +86,7 @@ export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: Sk
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4 text-teal-600" />
-                    {measurementDate ? format(measurementDate, "PPP") : <span>Pick a date</span>}
+                    {measurementDate ? formatLong(measurementDate) : <span>{t("pickDate", { ns: "common" })}</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -98,7 +102,7 @@ export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: Sk
             <div className="space-y-2">
               <Label htmlFor="currentSize" className="flex items-center">
                 <Ruler className="h-4 w-4 mr-2 text-teal-600" />
-                Skull Circumference (cm)
+                {t("form.skullCircumference")}
               </Label>
               <div className="relative">
                 <Input
@@ -117,26 +121,26 @@ export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: Sk
                     }
                   }}
                   className="h-12 border-gray-200 text-gray-900"
-                  placeholder="e.g. 35.0"
+                  placeholder={t("form.placeholder")}
                 />
               </div>
               {errors.currentSize && <p className="text-sm text-red-500">{errors.currentSize}</p>}
             </div>
 
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <h4 className="text-sm font-medium text-blue-800 mb-1">Measurement Tips</h4>
+              <h4 className="text-sm font-medium text-blue-800 mb-1">{t("form.tipsTitle")}</h4>
               <ul className="text-xs text-blue-700 list-disc list-inside space-y-1">
-                <li>Measure at the widest part of the head</li>
-                <li>Use a flexible measuring tape</li>
-                <li>Ensure the tape is snug but not tight</li>
-                <li>Record to the nearest 0.1 cm</li>
+                <li>{t("form.tip1")}</li>
+                <li>{t("form.tip2")}</li>
+                <li>{t("form.tip3")}</li>
+                <li>{t("form.tip4")}</li>
               </ul>
             </div>
           </form>
         </CardContent>
         <CardFooter className="flex justify-between">
           <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
+            {t("cancel", { ns: "common" })}
           </Button>
           <Button
             type="submit"
@@ -144,7 +148,7 @@ export default function SkullMeasurementForm({ patient, onSubmit, onCancel }: Sk
             disabled={isSubmitting}
             className="bg-gradient-primary hover:opacity-90 transition-opacity"
           >
-            {isSubmitting ? "Saving..." : "Save Measurement"}
+            {isSubmitting ? t("saving", { ns: "common" }) : t("form.saveMeasurement")}
           </Button>
         </CardFooter>
       </Card>

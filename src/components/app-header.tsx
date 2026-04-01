@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { ChevronLeft, Home, Menu, Users, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 interface AppHeaderProps {
   currentView: "patients" | "newPatient" | "patientDetail" | "newMeasurement" | "results" | "settings"
@@ -17,6 +18,7 @@ export default function AppHeader({ currentView, onBackToPatients }: AppHeaderPr
   const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { t } = useTranslation("auth")
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,19 +32,19 @@ export default function AppHeader({ currentView, onBackToPatients }: AppHeaderPr
   const getTitle = () => {
     switch (currentView) {
       case "patients":
-        return "Patient Registry"
+        return t("header.patientRegistry")
       case "newPatient":
-        return "Add New Patient"
+        return t("header.addNewPatient")
       case "patientDetail":
-        return "Patient Details"
+        return t("header.patientDetails")
       case "newMeasurement":
-        return "New Measurement"
+        return t("header.newMeasurement")
       case "results":
-        return "Measurement Results"
+        return t("header.measurementResults")
       case "settings":
-        return "Settings"
+        return t("header.settings")
       default:
-        return "CranialSize"
+        return t("header.appName")
     }
   }
 
@@ -82,7 +84,9 @@ export default function AppHeader({ currentView, onBackToPatients }: AppHeaderPr
               <div>
                 <h1 className="text-lg font-semibold text-gray-800">{getTitle()}</h1>
                 {currentView === "patients" && user?.name && (
-                  <p className="text-sm text-gray-500 hidden md:block">Welcome back, {user.name.split(" ")[0]}</p>
+                  <p className="text-sm text-gray-500 hidden md:block">
+                    {t("header.welcomeBack", { name: user.name.split(" ")[0] })}
+                  </p>
                 )}
               </div>
             </div>
@@ -105,7 +109,7 @@ export default function AppHeader({ currentView, onBackToPatients }: AppHeaderPr
               >
                 <img src="/cranialsize-logo.png" alt="CranialSize Logo" className="h-5 w-5" />
               </motion.div>
-              <span className="font-medium text-teal-700">CranialSize</span>
+              <span className="font-medium text-teal-700">{t("header.appName")}</span>
             </div>
             <UserMenu />
           </div>
@@ -125,13 +129,13 @@ export default function AppHeader({ currentView, onBackToPatients }: AppHeaderPr
                   <div className="h-8 w-8 bg-teal-50 rounded-full flex items-center justify-center">
                     <img src="/cranialsize-logo.png" alt="CranialSize Logo" className="h-5 w-5" />
                   </div>
-                  <span className="font-medium text-teal-700">CranialSize</span>
+                  <span className="font-medium text-teal-700">{t("header.appName")}</span>
                 </div>
                 <UserMenu />
               </div>
               {currentView === "patients" && user?.name && (
                 <p className="text-sm text-gray-500 pt-2 border-t border-gray-100">
-                  Welcome back, {user.name.split(" ")[0]}
+                  {t("header.welcomeBack", { name: user.name.split(" ")[0] })}
                 </p>
               )}
             </div>

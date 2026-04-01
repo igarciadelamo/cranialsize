@@ -17,6 +17,8 @@ import { motion } from "framer-motion"
 import { CalendarIcon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import { useLocalDate } from "@/i18n/use-local-date"
 
 interface NewPatientFormProps {
   onCancel: () => void
@@ -41,16 +43,18 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
 
   const { accessToken } = useAuth()
   const { addPatient } = usePatientStore()
+  const { t } = useTranslation("patients")
+  const { formatLong } = useLocalDate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const newErrors: typeof errors = {}
 
-    if (!firstName.trim()) newErrors.firstName = "First name is required"
-    if (!lastName.trim()) newErrors.lastName = "Last name is required"
-    if (!birthDate) newErrors.birthDate = "Birth date is required"
-    if (!sex) newErrors.sex = "Sex is required"
+    if (!firstName.trim()) newErrors.firstName = t("form.firstNameRequired")
+    if (!lastName.trim()) newErrors.lastName = t("form.lastNameRequired")
+    if (!birthDate) newErrors.birthDate = t("form.birthDateRequired")
+    if (!sex) newErrors.sex = t("form.sexRequired")
 
     setErrors(newErrors)
 
@@ -78,7 +82,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
         addPatient(newPatient)
         onComplete(newPatient)
       } catch (e) {
-        toast.error("Error saving patient. Please try again.")
+        toast.error(t("form.saveError"))
       } finally {
         setIsSubmitting(false)
       }
@@ -95,12 +99,12 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
       <Card className="shadow-md border-0 overflow-hidden">
         <div className="h-2 bg-gradient-primary"></div>
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-gray-800">Add New Patient</CardTitle>
+          <CardTitle className="text-xl font-bold text-gray-800">{t("form.titleNew")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} id="new-patient-form" className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
+              <Label htmlFor="firstName">{t("form.firstName")}</Label>
               <Input
                 id="firstName"
                 value={firstName}
@@ -114,7 +118,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
+              <Label htmlFor="lastName">{t("form.lastName")}</Label>
               <Input
                 id="lastName"
                 value={lastName}
@@ -128,7 +132,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
             </div>
 
             <div className="space-y-2">
-              <Label>Sex</Label>
+              <Label>{t("form.sex")}</Label>
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -141,7 +145,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
                     errors.sex && sex !== "M" && "border-red-300"
                   )}
                 >
-                  Male
+                  {t("form.male")}
                 </button>
                 <button
                   type="button"
@@ -154,14 +158,14 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
                     errors.sex && sex !== "F" && "border-red-300"
                   )}
                 >
-                  Female
+                  {t("form.female")}
                 </button>
               </div>
               {errors.sex && <p className="text-sm text-red-500">{errors.sex}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="birthHeadCircumference">Birth Head Circumference (cm) - Optional</Label>
+              <Label htmlFor="birthHeadCircumference">{t("form.birthHC")}</Label>
               <Input
                 id="birthHeadCircumference"
                 type="text"
@@ -178,13 +182,13 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
                       if (numValue >= HC_BIRTH_MIN && numValue <= HC_BIRTH_MAX) {
                         setErrors(prev => ({ ...prev, birthHeadCircumference: undefined }));
                       } else {
-                        setErrors(prev => ({ ...prev, birthHeadCircumference: `Please enter a valid measurement between ${HC_BIRTH_MIN} and ${HC_BIRTH_MAX} cm` }));
+                        setErrors(prev => ({ ...prev, birthHeadCircumference: t("form.hcRangeError", { min: HC_BIRTH_MIN, max: HC_BIRTH_MAX }) }));
                       }
                     }
                   }
                 }}
                 className="h-12 border-gray-200 text-gray-900"
-                placeholder="e.g. 35.0"
+                placeholder={t("form.birthHCPlaceholder")}
               />
               {errors.birthHeadCircumference && (
                 <p className="text-sm text-red-500">{errors.birthHeadCircumference}</p>
@@ -192,7 +196,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="birthDate">Birth Date</Label>
+              <Label htmlFor="birthDate">{t("form.birthDate")}</Label>
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -203,7 +207,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4 text-teal-600" />
-                    {birthDate ? format(birthDate, "PPP") : <span>Pick a date</span>}
+                    {birthDate ? formatLong(birthDate) : <span>{t("pickDate", { ns: "common" })}</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -220,7 +224,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
         </CardContent>
         <CardFooter className="flex justify-between">
           <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
+            {t("cancel", { ns: "common" })}
           </Button>
           <Button
             type="submit"
@@ -228,7 +232,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
             disabled={isSubmitting}
             className="bg-gradient-primary hover:opacity-90 transition-opacity"
           >
-            {isSubmitting ? "Saving..." : "Save Patient"}
+            {isSubmitting ? t("saving", { ns: "common" }) : t("form.savePatient")}
           </Button>
         </CardFooter>
       </Card>

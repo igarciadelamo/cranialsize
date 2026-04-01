@@ -17,8 +17,9 @@ import EditPatientDialog from "@/components/edit-patient-dialog"
 import { usePatientStore } from "@/lib/patient-store"
 import { useAuth } from "@/lib/auth-context"
 import type { Patient } from "@/lib/types"
-import { formatDate, calculateAge } from "@/lib/utils"
 import { motion } from "framer-motion"
+import { useTranslation } from "react-i18next"
+import { useLocalDate } from "@/i18n/use-local-date"
 
 interface PatientListProps {
   onPatientSelect: (patient: Patient) => void
@@ -35,15 +36,16 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([])
 
+  const { t } = useTranslation("patients")
+  const { formatDate, calculateAge } = useLocalDate()
+
   useEffect(() => {
-    // Filter patients based on search query
     const filtered = patients.filter(
       (patient) =>
         patient.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         patient.lastName.toLowerCase().includes(searchQuery.toLowerCase()),
     )
 
-    // Sort patients based on sort field and direction
     const sorted = [...filtered].sort((a, b) => {
       if (sortField === "name") {
         const nameA = `${a.firstName} ${a.lastName}`.toLowerCase()
@@ -54,7 +56,6 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
           ? a.birthDate.getTime() - b.birthDate.getTime()
           : b.birthDate.getTime() - a.birthDate.getTime()
       } else {
-        // records
         return sortDirection === "asc"
           ? a.measurements.length - b.measurements.length
           : b.measurements.length - a.measurements.length
@@ -96,7 +97,7 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search patients by name..."
+              placeholder={t("list.searchPlaceholder")}
               className="pl-10 pr-4 py-2 h-12 rounded-full border-gray-200 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -107,18 +108,18 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
             className="bg-gradient-primary hover:opacity-90 transition-opacity h-12 rounded-full shadow-md shadow-teal-200/50"
           >
             <Plus className="h-4 w-4 mr-2" />
-            New Patient
+            {t("list.newPatient")}
           </Button>
         </div>
 
         <Card className="shadow-md border-0 overflow-hidden">
           <CardHeader className="bg-gradient-secondary pb-3">
-            <CardTitle className="text-xl font-bold text-gray-800">Patient Registry</CardTitle>
+            <CardTitle className="text-xl font-bold text-gray-800">{t("list.title")}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="grid grid-cols-12 bg-gray-50 p-4 text-sm font-medium text-gray-500 border-b">
               <div className="col-span-4 flex items-center cursor-pointer" onClick={() => handleSort("name")}>
-                <span>Patient Name</span>
+                <span>{t("list.colName")}</span>
                 {sortField === "name" && (
                   <ArrowUpDown
                     className={`ml-1 h-3 w-3 ${sortDirection === "desc" ? "rotate-180" : ""} transition-transform`}
@@ -126,7 +127,7 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
                 )}
               </div>
               <div className="col-span-2 flex items-center cursor-pointer" onClick={() => handleSort("age")}>
-                <span>Age</span>
+                <span>{t("list.colAge")}</span>
                 {sortField === "age" && (
                   <ArrowUpDown
                     className={`ml-1 h-3 w-3 ${sortDirection === "desc" ? "rotate-180" : ""} transition-transform`}
@@ -134,10 +135,10 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
                 )}
               </div>
               <div className="col-span-3 flex items-center cursor-pointer">
-                <span>Birth Date</span>
+                <span>{t("list.colBirthDate")}</span>
               </div>
               <div className="col-span-2 flex items-center cursor-pointer" onClick={() => handleSort("records")}>
-                <span>Records</span>
+                <span>{t("list.colRecords")}</span>
                 {sortField === "records" && (
                   <ArrowUpDown
                     className={`ml-1 h-3 w-3 ${sortDirection === "desc" ? "rotate-180" : ""} transition-transform`}
@@ -195,8 +196,7 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
                     </div>
                     <div className="col-span-1 text-gray-600 flex items-center">
                       <span className="pill-badge pill-badge-primary">
-                        {patient.measurementCount ?? patient.measurements.length}{" "}
-                        {(patient.measurementCount ?? patient.measurements.length) === 1 ? "record" : "records"}
+                        {t("list.record", { count: patient.measurementCount ?? patient.measurements.length })}
                       </span>
                     </div>
                     <div className="col-span-2 flex items-center justify-end gap-1">
@@ -225,14 +225,14 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
                 <div className="mx-auto h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
                   <Search className="h-6 w-6 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">No patients found</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-1">{t("list.noResults")}</h3>
                 <p className="text-gray-500">
-                  {searchQuery ? "Try adjusting your search query" : "Add your first patient to get started"}
+                  {searchQuery ? t("list.noResultsSearch") : t("list.noResultsEmpty")}
                 </p>
                 {!searchQuery && (
                   <Button onClick={onAddNewPatient} className="mt-4 bg-teal-600 hover:bg-teal-700">
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Patient
+                    {t("list.addPatient")}
                   </Button>
                 )}
               </div>
@@ -251,13 +251,16 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
       <AlertDialog open={!!patientToDelete} onOpenChange={(open) => !open && setPatientToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete patient?</AlertDialogTitle>
+            <AlertDialogTitle>{t("list.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete {patientToDelete?.firstName} {patientToDelete?.lastName} and all their measurements. This action cannot be undone.
+              {t("list.deleteDescription", {
+                firstName: patientToDelete?.firstName,
+                lastName: patientToDelete?.lastName,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel", { ns: "common" })}</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
                 if (patientToDelete && accessToken) {
@@ -267,7 +270,7 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t("delete", { ns: "common" })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

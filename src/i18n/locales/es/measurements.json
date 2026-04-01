@@ -1,0 +1,44 @@
+{
+  "form": {
+    "title": "Nueva medida para {{firstName}} {{lastName}}",
+    "measurementDate": "Fecha de la medida",
+    "skullCircumference": "Perímetro cefálico (cm)",
+    "placeholder": "Ej. 35,0",
+    "rangeError": "Introduce una medida válida entre {{min}} y {{max}} cm",
+    "tipsTitle": "Consejos para la medida",
+    "tip1": "Mide en la parte más ancha de la cabeza",
+    "tip2": "Usa una cinta métrica flexible",
+    "tip3": "La cinta debe estar ajustada pero no apretada",
+    "tip4": "Registra al milímetro más próximo (0,1 cm)",
+    "saveMeasurement": "Guardar medida",
+    "saveError": "Error al guardar la medida. Inténtalo de nuevo."
+  },
+  "edit": {
+    "title": "Editar medida",
+    "description": "Actualiza la medida tomada el {{date}}.",
+    "measurementDate": "Fecha de la medida",
+    "headCircumference": "Perímetro cefálico (cm)",
+    "placeholder": "Ej. 42,5",
+    "dateRequired": "La fecha es obligatoria",
+    "sizeRequired": "La medida es obligatoria",
+    "rangeError": "Introduce un valor entre {{min}} y {{max}} cm",
+    "saveChanges": "Guardar cambios",
+    "saveError": "Error al guardar la medida. Inténtalo de nuevo."
+  },
+  "results": {
+    "title": "Resultados de la medida",
+    "patient": "Paciente",
+    "measurementDate": "Fecha de la medida",
+    "ageAtMeasurement": "Edad en la medida",
+    "ageMonths": "{{months}} meses",
+    "ageDays": "({{days}} días)",
+    "measuredSize": "Medida registrada",
+    "expectedSize": "Tamaño esperado (P50 OMS)",
+    "fromExpected": "{{diff}} cm respecto al esperado",
+    "birthSizeActual": "PC al nacer (real)",
+    "birthSizeEstimated": "PC al nacer (estimado)",
+    "percentile": "Percentil (OMS)",
+    "percentileNA": "No disponible",
+    "backToPatient": "Volver al paciente"
+  }
+}
