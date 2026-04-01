@@ -14,12 +14,13 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Measurement, Patient } from "@/lib/types"
-import { calculateAge, formatDate } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
 import { usePatientStore } from "@/lib/patient-store"
 import { motion } from "framer-motion"
 import { Calendar, Pencil, Plus, Ruler, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { useLocalDate } from "@/i18n/use-local-date"
 
 interface PatientDetailProps {
   patient: Patient
@@ -35,6 +36,9 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
   const { accessToken } = useAuth()
   const { patients, loadMeasurements, isMeasurementsLoading, deleteMeasurement } = usePatientStore()
   const patient = patients.find((p) => p.id === patientProp.id) ?? patientProp
+
+  const { t } = useTranslation("patients")
+  const { formatDate, calculateAge } = useLocalDate()
 
   useEffect(() => {
     if (accessToken) {
@@ -66,41 +70,41 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                 className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-sm shadow-teal-200/50"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                New Measurement
+                {t("detail.newMeasurement")}
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-gradient-secondary p-4 rounded-xl shadow-sm">
-                <p className="text-sm text-gray-500">Age</p>
+                <p className="text-sm text-gray-500">{t("detail.age")}</p>
                 <p className="text-xl font-semibold text-gray-800">{calculateAge(patient.birthDate)}</p>
               </div>
               <div className="bg-gradient-secondary p-4 rounded-xl shadow-sm">
-                <p className="text-sm text-gray-500">Birth Date</p>
+                <p className="text-sm text-gray-500">{t("detail.birthDate")}</p>
                 <p className="text-xl font-semibold text-gray-800 flex items-center">
                   <Calendar className="h-4 w-4 mr-2 text-teal-600" />
                   {formatDate(patient.birthDate)}
                 </p>
               </div>
               <div className="bg-gradient-secondary p-4 rounded-xl shadow-sm">
-                <p className="text-sm text-gray-500">Sex</p>
+                <p className="text-sm text-gray-500">{t("detail.sex")}</p>
                 <p className="text-xl font-semibold text-gray-800">
-                  {patient.sex === "M" ? "Male" : "Female"}
+                  {patient.sex === "M" ? t("detail.sexMale") : t("detail.sexFemale")}
                 </p>
               </div>
               <div className="bg-gradient-secondary p-4 rounded-xl shadow-sm">
-                <p className="text-sm text-gray-500">Measurements</p>
+                <p className="text-sm text-gray-500">{t("detail.measurements")}</p>
                 <p className="text-xl font-semibold text-gray-800">
-                  {patient.measurements.length} {patient.measurements.length === 1 ? "record" : "records"}
+                  {t("detail.record", { count: patient.measurements.length })}
                 </p>
               </div>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid grid-cols-2 mb-4">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="measurements">Measurement History</TabsTrigger>
+                <TabsTrigger value="overview">{t("detail.tabOverview")}</TabsTrigger>
+                <TabsTrigger value="measurements">{t("detail.tabHistory")}</TabsTrigger>
               </TabsList>
               <TabsContent value="overview" className="space-y-4">
                 {isMeasurementsLoading ? (
@@ -126,10 +130,10 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                 ) : patient.measurements.length > 0 ? (
                   <div className="border rounded-xl overflow-hidden shadow-sm">
                     <div className="grid grid-cols-12 bg-gray-50 p-4 text-sm font-medium text-gray-500 border-b">
-                      <div className="col-span-3">Date</div>
-                      <div className="col-span-3">Age at Measure</div>
-                      <div className="col-span-3">Measurement</div>
-                      <div className="col-span-2">Percentile</div>
+                      <div className="col-span-3">{t("detail.colDate")}</div>
+                      <div className="col-span-3">{t("detail.colAgeAtMeasure")}</div>
+                      <div className="col-span-3">{t("detail.colMeasurement")}</div>
+                      <div className="col-span-2">{t("detail.colPercentile")}</div>
                       <div className="col-span-1"></div>
                     </div>
 
@@ -177,11 +181,11 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                     <div className="mx-auto h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
                       <Ruler className="h-6 w-6 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-1">No measurements recorded yet</h3>
-                    <p className="text-gray-500 mb-4">Add the first measurement to start tracking growth</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-1">{t("detail.noMeasurements")}</h3>
+                    <p className="text-gray-500 mb-4">{t("detail.noMeasurementsDesc")}</p>
                     <Button onClick={onAddMeasurement} className="bg-teal-600 hover:bg-teal-700">
                       <Plus className="h-4 w-4 mr-2" />
-                      Add Measurement
+                      {t("detail.addMeasurement")}
                     </Button>
                   </div>
                 )}
@@ -191,7 +195,7 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
           </CardContent>
           <CardFooter>
             <Button variant="outline" onClick={onBack} className="w-full">
-              Back to Patient List
+              {t("detail.backToList")}
             </Button>
           </CardFooter>
         </Card>
@@ -209,19 +213,20 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete measurement?</AlertDialogTitle>
+            <AlertDialogTitle>{t("detail.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the measurement from{" "}
-              {selectedMeasurement && formatDate(selectedMeasurement.date)}. This action cannot be undone.
+              {t("detail.deleteDescription", {
+                date: selectedMeasurement ? formatDate(selectedMeasurement.date) : "",
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel", { ns: "common" })}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteMeasurement}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t("delete", { ns: "common" })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -20,6 +20,8 @@ import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import { useLocalDate } from "@/i18n/use-local-date"
 
 interface EditPatientDialogProps {
   patient: Patient
@@ -46,14 +48,16 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
 
   const { accessToken } = useAuth()
   const { editPatient } = usePatientStore()
+  const { t } = useTranslation("patients")
+  const { formatLong } = useLocalDate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const newErrors: typeof errors = {}
-    if (!firstName.trim()) newErrors.firstName = "First name is required"
-    if (!lastName.trim()) newErrors.lastName = "Last name is required"
-    if (!birthDate) newErrors.birthDate = "Birth date is required"
+    if (!firstName.trim()) newErrors.firstName = t("form.firstNameRequired")
+    if (!lastName.trim()) newErrors.lastName = t("form.lastNameRequired")
+    if (!birthDate) newErrors.birthDate = t("form.birthDateRequired")
     setErrors(newErrors)
     if (Object.keys(newErrors).length > 0) return
 
@@ -69,7 +73,7 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
       await editPatient(accessToken!, patient.id, data)
       onOpenChange(false)
     } catch {
-      toast.error("Error saving patient. Please try again.")
+      toast.error(t("edit.saveError"))
     } finally {
       setIsSubmitting(false)
     }
@@ -79,15 +83,15 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Patient</DialogTitle>
+          <DialogTitle>{t("edit.title")}</DialogTitle>
           <DialogDescription>
-            Update the details for {patient.firstName} {patient.lastName}.
+            {t("edit.description", { firstName: patient.firstName, lastName: patient.lastName })}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} id="edit-patient-form" className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="edit-firstName">First Name</Label>
+            <Label htmlFor="edit-firstName">{t("form.firstName")}</Label>
             <Input
               id="edit-firstName"
               value={firstName}
@@ -98,7 +102,7 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-lastName">Last Name</Label>
+            <Label htmlFor="edit-lastName">{t("form.lastName")}</Label>
             <Input
               id="edit-lastName"
               value={lastName}
@@ -109,7 +113,7 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
           </div>
 
           <div className="space-y-2">
-            <Label>Sex</Label>
+            <Label>{t("form.sex")}</Label>
             <div className="flex gap-3">
               <button
                 type="button"
@@ -121,7 +125,7 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
                     : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                 )}
               >
-                Male
+                {t("form.male")}
               </button>
               <button
                 type="button"
@@ -133,13 +137,13 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
                     : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                 )}
               >
-                Female
+                {t("form.female")}
               </button>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Birth Date</Label>
+            <Label>{t("form.birthDate")}</Label>
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -147,7 +151,7 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
                   className={cn("w-full justify-start text-left font-normal", !birthDate && "text-muted-foreground")}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4 text-teal-600" />
-                  {birthDate ? format(birthDate, "PPP") : <span>Pick a date</span>}
+                  {birthDate ? formatLong(birthDate) : <span>{t("pickDate", { ns: "common" })}</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -158,7 +162,7 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-birthHeadCircumference">Birth Head Circumference (cm) - Optional</Label>
+            <Label htmlFor="edit-birthHeadCircumference">{t("form.birthHC")}</Label>
             <Input
               id="edit-birthHeadCircumference"
               type="text"
@@ -177,14 +181,14 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
                     } else {
                       setErrors((prev) => ({
                         ...prev,
-                        birthHeadCircumference: `Please enter a value between ${HC_BIRTH_MIN} and ${HC_BIRTH_MAX} cm`,
+                        birthHeadCircumference: t("edit.hcRangeError", { min: HC_BIRTH_MIN, max: HC_BIRTH_MAX }),
                       }))
                     }
                   }
                 }
               }}
               className="h-12 border-gray-200"
-              placeholder="e.g. 35.0"
+              placeholder={t("form.birthHCPlaceholder")}
             />
             {errors.birthHeadCircumference && (
               <p className="text-sm text-red-500">{errors.birthHeadCircumference}</p>
@@ -194,7 +198,7 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
 
         <DialogFooter className="flex justify-between">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-            Cancel
+            {t("cancel", { ns: "common" })}
           </Button>
           <Button
             type="submit"
@@ -202,7 +206,7 @@ export default function EditPatientDialog({ patient, open, onOpenChange }: EditP
             disabled={isSubmitting}
             className="bg-gradient-primary hover:opacity-90 transition-opacity"
           >
-            {isSubmitting ? "Saving..." : "Save Changes"}
+            {isSubmitting ? t("saving", { ns: "common" }) : t("edit.saveChanges")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,0 +1,15 @@
+{
+  "cancel": "Cancelar",
+  "delete": "Eliminar",
+  "saving": "Guardando...",
+  "pickDate": "Seleccionar fecha",
+  "saveChanges": "Guardar cambios",
+  "age": {
+    "lessThanMonth": "< 1 mes",
+    "months_one": "{{count}} mes",
+    "months_other": "{{count}} meses",
+    "years_one": "{{count}} año",
+    "years_other": "{{count}} años",
+    "yearsMonths": "{{years}}, {{months}}"
+  }
+}

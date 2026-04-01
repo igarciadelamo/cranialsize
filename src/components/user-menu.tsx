@@ -11,16 +11,18 @@ import { useAuth } from "@/lib/auth-context"
 import { LogOut, Settings } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 export default function UserMenu() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const { t } = useTranslation("auth")
 
   if (!user) {
     return (
       <Button variant="outline" size="sm" onClick={() => navigate("/auth/signin")}>
-        Sign In
+        {t("menu.signIn")}
       </Button>
     )
   }
@@ -58,7 +60,7 @@ export default function UserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate("/settings")}>
           <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
+          <span>{t("menu.settings")}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={handleSignOut}
@@ -68,12 +70,12 @@ export default function UserMenu() {
           {isSigningOut ? (
             <>
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
-              <span>Signing out...</span>
+              <span>{t("menu.signingOut")}</span>
             </>
           ) : (
             <>
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Sign out</span>
+              <span>{t("menu.signOut")}</span>
             </>
           )}
         </DropdownMenuItem>

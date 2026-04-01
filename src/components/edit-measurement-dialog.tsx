@@ -16,10 +16,11 @@ import { usePatientStore } from "@/lib/patient-store"
 import type { Measurement } from "@/lib/types"
 import { HC_GENERAL_MIN, HC_GENERAL_MAX } from "@/lib/constants"
 import { cn } from "@/lib/utils"
-import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import { useLocalDate } from "@/i18n/use-local-date"
 
 interface EditMeasurementDialogProps {
   patientId: string
@@ -37,17 +38,19 @@ export default function EditMeasurementDialog({ patientId, measurement, open, on
 
   const { accessToken } = useAuth()
   const { editMeasurement } = usePatientStore()
+  const { t } = useTranslation("measurements")
+  const { formatLong } = useLocalDate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const newErrors: typeof errors = {}
-    if (!date) newErrors.date = "Date is required"
+    if (!date) newErrors.date = t("edit.dateRequired")
     const sizeNum = parseFloat(size)
     if (!size || isNaN(sizeNum)) {
-      newErrors.size = "Measurement is required"
+      newErrors.size = t("edit.sizeRequired")
     } else if (sizeNum < HC_GENERAL_MIN || sizeNum > HC_GENERAL_MAX) {
-      newErrors.size = `Please enter a value between ${HC_GENERAL_MIN} and ${HC_GENERAL_MAX} cm`
+      newErrors.size = t("edit.rangeError", { min: HC_GENERAL_MIN, max: HC_GENERAL_MAX })
     }
     setErrors(newErrors)
     if (Object.keys(newErrors).length > 0) return
@@ -57,7 +60,7 @@ export default function EditMeasurementDialog({ patientId, measurement, open, on
       await editMeasurement(accessToken!, patientId, measurement.id!, { date, size: sizeNum })
       onOpenChange(false)
     } catch {
-      toast.error("Error saving measurement. Please try again.")
+      toast.error(t("edit.saveError"))
     } finally {
       setIsSubmitting(false)
     }
@@ -67,15 +70,15 @@ export default function EditMeasurementDialog({ patientId, measurement, open, on
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Measurement</DialogTitle>
+          <DialogTitle>{t("edit.title")}</DialogTitle>
           <DialogDescription>
-            Update the measurement taken on {format(measurement.date, "PPP")}.
+            {t("edit.description", { date: formatLong(measurement.date) })}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} id="edit-measurement-form" className="space-y-4">
           <div className="space-y-2">
-            <Label>Measurement Date</Label>
+            <Label>{t("edit.measurementDate")}</Label>
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -83,7 +86,7 @@ export default function EditMeasurementDialog({ patientId, measurement, open, on
                   className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4 text-teal-600" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                  {date ? formatLong(date) : <span>{t("pickDate", { ns: "common" })}</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -94,7 +97,7 @@ export default function EditMeasurementDialog({ patientId, measurement, open, on
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-measurement-size">Head Circumference (cm)</Label>
+            <Label htmlFor="edit-measurement-size">{t("edit.headCircumference")}</Label>
             <Input
               id="edit-measurement-size"
               type="text"
@@ -112,13 +115,13 @@ export default function EditMeasurementDialog({ patientId, measurement, open, on
                   } else {
                     setErrors((prev) => ({
                       ...prev,
-                      size: `Please enter a value between ${HC_GENERAL_MIN} and ${HC_GENERAL_MAX} cm`,
+                      size: t("edit.rangeError", { min: HC_GENERAL_MIN, max: HC_GENERAL_MAX }),
                     }))
                   }
                 }
               }}
               className={cn("h-12 border-gray-200", errors.size && "border-red-500")}
-              placeholder="e.g. 42.5"
+              placeholder={t("edit.placeholder")}
             />
             {errors.size && <p className="text-sm text-red-500">{errors.size}</p>}
           </div>
@@ -126,7 +129,7 @@ export default function EditMeasurementDialog({ patientId, measurement, open, on
 
         <DialogFooter className="flex justify-between">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-            Cancel
+            {t("cancel", { ns: "common" })}
           </Button>
           <Button
             type="submit"
@@ -134,7 +137,7 @@ export default function EditMeasurementDialog({ patientId, measurement, open, on
             disabled={isSubmitting}
             className="bg-gradient-primary hover:opacity-90 transition-opacity"
           >
-            {isSubmitting ? "Saving..." : "Save Changes"}
+            {isSubmitting ? t("saving", { ns: "common" }) : t("edit.saveChanges")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -5,9 +5,11 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useAuth } from "@/lib/auth-context"
 import { motion } from "framer-motion"
 import { FcGoogle } from "react-icons/fc"
+import { useTranslation } from "react-i18next"
 
 export default function Settings() {
   const { user } = useAuth()
+  const { t } = useTranslation("auth")
 
   if (!user) return null
 
@@ -28,7 +30,7 @@ export default function Settings() {
             <div className="space-y-6">
               <Card className="border border-gray-100 overflow-hidden">
                 <div className="bg-teal-50/80 px-6 py-3 border-b border-teal-100/50">
-                  <h2 className="text-sm font-medium text-teal-700">User</h2>
+                  <h2 className="text-sm font-medium text-teal-700">{t("settings.user")}</h2>
                 </div>
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
@@ -43,7 +45,7 @@ export default function Settings() {
                         <h2 className="text-lg font-semibold text-gray-900">{user.name}</h2>
                         <Badge variant="outline" className="text-xs font-normal bg-gray-50">
                           <FcGoogle className="mr-1 h-3 w-3" />
-                          Google Account
+                          {t("settings.googleAccount")}
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-600">{user.email}</p>
@@ -54,16 +56,16 @@ export default function Settings() {
 
               <Card className="border border-gray-100 overflow-hidden">
                 <div className="bg-teal-50/80 px-6 py-3 border-b border-teal-100/50">
-                  <h2 className="text-sm font-medium text-teal-700">Plan</h2>
+                  <h2 className="text-sm font-medium text-teal-700">{t("settings.plan")}</h2>
                 </div>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {user.plan === "premium" ? "Premium Plan" : "Free Plan"}
+                      {user.plan === "premium" ? t("settings.premiumPlan") : t("settings.freePlan")}
                     </h3>
                     <span className="flex items-center text-xs text-teal-600">
                       <span className="h-1.5 w-1.5 bg-teal-500 rounded-full mr-1"></span>
-                      Active
+                      {t("settings.active")}
                     </span>
                   </div>
                 </CardContent>
