@@ -4,7 +4,14 @@ import userEvent from "@testing-library/user-event"
 import { AuthProvider, useAuth } from "./auth-context"
 
 vi.mock("./api-service", () => ({
-  userService: { doLogin: vi.fn() },
+  userService: {
+    doLogin: vi.fn(),
+    updateLanguagePreference: vi.fn().mockResolvedValue(undefined),
+  },
+}))
+
+vi.mock("@/i18n", () => ({
+  default: { changeLanguage: vi.fn() },
 }))
 
 function TestConsumer() {

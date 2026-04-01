@@ -1,11 +1,13 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { userService, type UserResponse } from "./api-service"
+import i18n from "@/i18n"
 
 export interface User {
   name: string
   email: string
   image: string
   plan: "free" | "premium"
+  languagePreference?: string
 }
 
 interface AuthContextType {
@@ -14,6 +16,7 @@ interface AuthContextType {
   isLoading: boolean
   login: (idToken: string) => Promise<void>
   logout: () => void
+  updateLanguagePreference: (lang: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -22,12 +25,18 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   login: async () => {},
   logout: () => {},
+  updateLanguagePreference: async () => {},
 })
 
 export const useAuth = () => useContext(AuthContext)
 
 const STORAGE_KEY = "cranialsize_user"
 const TOKEN_KEY = "cranialsize_token"
+
+function normalizeLanguage(lang: string): string {
+  const code = lang.split("-")[0].toLowerCase()
+  return code === "es" ? "es" : "en"
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -40,8 +49,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const storedUser = localStorage.getItem(STORAGE_KEY)
       const storedToken = localStorage.getItem(TOKEN_KEY)
       if (storedUser && storedToken) {
-        setUser(JSON.parse(storedUser))
+        const parsed = JSON.parse(storedUser) as User
+        setUser(parsed)
         setAccessToken(storedToken)
+        if (parsed.languagePreference) {
+          i18n.changeLanguage(parsed.languagePreference)
+        }
       }
     } catch {
       // Corrupted data — clear it
@@ -55,11 +68,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (idToken: string) => {
     const data: UserResponse = await userService.doLogin(idToken)
 
+    let lang = data.language_preference ?? null
+
+    if (!lang) {
+      lang = normalizeLanguage(navigator.language)
+      userService.updateLanguagePreference(data.token, lang).catch(() => {})
+    }
+
+    i18n.changeLanguage(lang)
+
     const userData: User = {
       name: data.name,
       email: data.email,
       image: data.picture,
       plan: data.plan,
+      languagePreference: lang,
     }
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
@@ -75,8 +98,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessToken(null)
   }
 
+  const updateLanguagePreference = async (lang: string) => {
+    if (!accessToken) return
+    await userService.updateLanguagePreference(accessToken, lang)
+    await i18n.changeLanguage(lang)
+    setUser((prev) => {
+      if (!prev) return prev
+      const updated = { ...prev, languagePreference: lang }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+      return updated
+    })
+  }
+
   return (
-    <AuthContext.Provider value={{ user, accessToken, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, accessToken, isLoading, login, logout, updateLanguagePreference }}>
       {children}
     </AuthContext.Provider>
   )
