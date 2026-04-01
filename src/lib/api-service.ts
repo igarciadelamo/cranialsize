@@ -5,6 +5,7 @@ export interface UserResponse {
   email: string
   picture: string
   plan: "free" | "premium"
+  language_preference: string | null
   token: string
 }
 
@@ -143,5 +144,12 @@ export const userService = {
     }
 
     return response.json()
+  },
+
+  async updateLanguagePreference(token: string, languagePreference: string): Promise<void> {
+    return apiFetch("/users/me", token, {
+      method: "PATCH",
+      body: JSON.stringify({ language_preference: languagePreference }),
+    })
   },
 }
