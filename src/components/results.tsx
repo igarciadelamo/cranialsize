@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { referenceService } from "@/lib/api-service"
-import { calculateEstimatedBirthSize } from "@/lib/skull-calculations"
+
 import type { Measurement, Patient } from "@/lib/types"
 import { differenceInDays, differenceInMonths } from "date-fns"
 import { motion } from "framer-motion"
@@ -24,6 +24,7 @@ export default function Results({ patient, data, onBack }: ResultsProps) {
   const ageInMonths = differenceInMonths(measurementDate, birthDate)
 
   const [p50, setP50] = useState<number | null>(null)
+  const [p50AtBirth, setP50AtBirth] = useState<number | null>(null)
 
   const { t } = useTranslation("measurements")
   const { formatDate } = useLocalDate()
@@ -33,11 +34,16 @@ export default function Results({ patient, data, onBack }: ResultsProps) {
       .then((curves) => {
         const point = curves.find((c) => c.month === ageInMonths)
         setP50(point?.p50 ?? null)
+        const birthPoint = curves.find((c) => c.month === 0)
+        setP50AtBirth(birthPoint?.p50 ?? null)
       })
       .catch(() => {})
   }, [patient.sex, ageInMonths])
 
-  const estimatedBirthSize = calculateEstimatedBirthSize(currentSize, ageInMonths)
+  const estimatedBirthSize =
+    p50 != null && p50AtBirth != null
+      ? Math.max(p50AtBirth + (currentSize - p50), 30)
+      : null
   const sizeDifference = p50 != null ? currentSize - p50 : null
   const percentile = data.percentile
 
@@ -119,30 +125,32 @@ export default function Results({ patient, data, onBack }: ResultsProps) {
               </motion.div>
             )}
 
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.3 }}
-              className="bg-white border rounded-xl p-4 shadow-sm"
-            >
-              {patient.birthHeadCircumference ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">{t("results.birthSizeActual")}</p>
-                    <p className="text-lg font-semibold text-gray-800">{patient.birthHeadCircumference.toFixed(1)} cm</p>
+            {estimatedBirthSize != null && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.3 }}
+                className="bg-white border rounded-xl p-4 shadow-sm"
+              >
+                {patient.birthHeadCircumference ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">{t("results.birthSizeActual")}</p>
+                      <p className="text-lg font-semibold text-gray-800">{patient.birthHeadCircumference.toFixed(1)} cm</p>
+                    </div>
+                    <div className="border-l border-gray-200 pl-4">
+                      <p className="text-sm text-gray-500">{t("results.birthSizeEstimated")}</p>
+                      <p className="text-lg font-semibold text-gray-800">{estimatedBirthSize.toFixed(1)} cm</p>
+                    </div>
                   </div>
-                  <div className="border-l border-gray-200 pl-4">
+                ) : (
+                  <>
                     <p className="text-sm text-gray-500">{t("results.birthSizeEstimated")}</p>
                     <p className="text-lg font-semibold text-gray-800">{estimatedBirthSize.toFixed(1)} cm</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-sm text-gray-500">{t("results.birthSizeEstimated")}</p>
-                  <p className="text-lg font-semibold text-gray-800">{estimatedBirthSize.toFixed(1)} cm</p>
-                </>
-              )}
-            </motion.div>
+                  </>
+                )}
+              </motion.div>
+            )}
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
