@@ -13,8 +13,8 @@ vi.mock("@/lib/auth-context", () => ({
 }))
 
 vi.mock("@/components/edit-patient-dialog", () => ({
-  default: ({ open, patient }: { open: boolean; patient: { firstName: string } }) =>
-    open ? <div data-testid="edit-dialog">{patient.firstName}</div> : null,
+  default: ({ open, patient, onOpenChange }: { open: boolean; patient: { firstName: string }; onOpenChange: (v: boolean) => void }) =>
+    open ? <div data-testid="edit-dialog"><button onClick={() => onOpenChange(false)}>CloseDialog</button>{patient.firstName}</div> : null,
 }))
 
 const mockPatients = [
@@ -183,6 +183,17 @@ describe("PatientList — edit and delete actions", () => {
     await waitFor(() => {
       expect(mockDeletePatient).toHaveBeenCalledWith("mock-token", "1")
     })
+  })
+
+  it("clears patientToEdit when edit dialog is closed via onOpenChange", async () => {
+    renderList()
+    const pencilButtons = screen.getAllByRole("button").filter((btn) =>
+      btn.querySelector(".lucide-pencil")
+    )
+    await userEvent.click(pencilButtons[0])
+    expect(screen.getByTestId("edit-dialog")).toBeInTheDocument()
+    await userEvent.click(screen.getByRole("button", { name: /closedialog/i }))
+    expect(screen.queryByTestId("edit-dialog")).not.toBeInTheDocument()
   })
 
   it("closes delete dialog without calling deletePatient when Cancel is clicked", async () => {

@@ -155,6 +155,32 @@ describe("EditPatientDialog", () => {
     })
   })
 
+  it("switches sex back to Female when Female button is clicked from Male", async () => {
+    renderDialog({ sex: "M" as const })
+    await userEvent.click(screen.getByRole("button", { name: "Female" }))
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }))
+    await waitFor(() => {
+      expect(mockEditPatient).toHaveBeenCalledWith(
+        "mock-token",
+        "p1",
+        expect.objectContaining({ sex: "F" })
+      )
+    })
+  })
+
+  it("clears circumference error when value becomes valid", async () => {
+    renderDialog()
+    await userEvent.type(screen.getByLabelText(/birth head circumference/i), "99")
+    await waitFor(() => {
+      expect(screen.getByText(/please enter a value between/i)).toBeInTheDocument()
+    })
+    await userEvent.clear(screen.getByLabelText(/birth head circumference/i))
+    await userEvent.type(screen.getByLabelText(/birth head circumference/i), "35")
+    await waitFor(() => {
+      expect(screen.queryByText(/please enter a value between/i)).not.toBeInTheDocument()
+    })
+  })
+
   it("shows toast on API error", async () => {
     const { toast } = await import("sonner")
     mockEditPatient.mockRejectedValueOnce(new Error("500"))

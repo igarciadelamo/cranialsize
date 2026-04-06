@@ -305,6 +305,92 @@ describe("editPatient", () => {
   })
 })
 
+describe("editPatient — non-matching patient", () => {
+  it("leaves other patients unchanged when patientId does not match", async () => {
+    const { patientService } = await import("./api-service")
+    vi.mocked(patientService.patch).mockResolvedValueOnce({
+      id: "p2", firstName: "Sophia", lastName: "Doe",
+      birthDate: "2022-03-15", sex: "F",
+      birthHeadCircumference: null, userId: null, createdAt: "", measurementCount: 0,
+    })
+    usePatientStore.setState({
+      patients: [
+        { id: "p1", firstName: "Emma", lastName: "Doe", birthDate: new Date(), sex: "F" as const, measurements: [] },
+        { id: "p2", firstName: "Noah", lastName: "Doe", birthDate: new Date(), sex: "M" as const, measurements: [] },
+      ],
+    })
+    await act(async () => {
+      await usePatientStore.getState().editPatient("token", "p2", { firstName: "Sophia" })
+    })
+    const p1 = usePatientStore.getState().patients.find((p) => p.id === "p1")
+    expect(p1?.firstName).toBe("Emma")
+  })
+})
+
+describe("editMeasurement — non-matching patient", () => {
+  it("leaves other patients unchanged when patientId does not match", async () => {
+    const { measurementService } = await import("./api-service")
+    vi.mocked(measurementService.patch).mockResolvedValueOnce({
+      id: "m1", patientId: "p2", measuredAt: "2024-08-01T00:00:00.000Z",
+      headCircumference: 43.5, createdAt: "", percentile: "P50",
+    })
+    usePatientStore.setState({
+      patients: [
+        { id: "p1", firstName: "Emma", lastName: "Doe", birthDate: new Date(), sex: "F" as const,
+          measurements: [{ id: "m1", date: new Date("2024-07-01"), size: 42.0 }] },
+        { id: "p2", firstName: "Noah", lastName: "Doe", birthDate: new Date(), sex: "M" as const,
+          measurements: [{ id: "m1", date: new Date("2024-07-01"), size: 42.0 }] },
+      ],
+    })
+    await act(async () => {
+      await usePatientStore.getState().editMeasurement("token", "p2", "m1", { size: 43.5 })
+    })
+    const p1 = usePatientStore.getState().patients.find((p) => p.id === "p1")
+    expect(p1?.measurements[0].size).toBe(42.0)
+  })
+})
+
+describe("deleteMeasurement — non-matching patient", () => {
+  it("leaves other patients unchanged when patientId does not match", async () => {
+    const { measurementService } = await import("./api-service")
+    vi.mocked(measurementService.delete).mockResolvedValueOnce(undefined)
+    usePatientStore.setState({
+      patients: [
+        { id: "p1", firstName: "Emma", lastName: "Doe", birthDate: new Date(), sex: "F" as const,
+          measurements: [{ id: "m1", date: new Date(), size: 42 }] },
+        { id: "p2", firstName: "Noah", lastName: "Doe", birthDate: new Date(), sex: "M" as const,
+          measurements: [{ id: "m1", date: new Date(), size: 42 }] },
+      ],
+    })
+    await act(async () => {
+      await usePatientStore.getState().deleteMeasurement("token", "p2", "m1")
+    })
+    const p1 = usePatientStore.getState().patients.find((p) => p.id === "p1")
+    expect(p1?.measurements).toHaveLength(1)
+  })
+})
+
+describe("addMeasurement — non-matching patient", () => {
+  it("leaves other patients unchanged when patientId does not match", async () => {
+    const { measurementService } = await import("./api-service")
+    vi.mocked(measurementService.create).mockResolvedValueOnce({
+      id: "m-new", patientId: "p2", measuredAt: "2024-07-01T00:00:00.000Z",
+      headCircumference: 42, createdAt: "",
+    })
+    usePatientStore.setState({
+      patients: [
+        { id: "p1", firstName: "Emma", lastName: "Doe", birthDate: new Date(), sex: "F" as const, measurements: [] },
+        { id: "p2", firstName: "Noah", lastName: "Doe", birthDate: new Date(), sex: "M" as const, measurements: [] },
+      ],
+    })
+    await act(async () => {
+      await usePatientStore.getState().addMeasurement("token", "p2", { date: new Date("2024-07-01"), size: 42 })
+    })
+    const p1 = usePatientStore.getState().patients.find((p) => p.id === "p1")
+    expect(p1?.measurements).toHaveLength(0)
+  })
+})
+
 describe("deletePatient", () => {
   it("calls patientService.delete with the correct ids", async () => {
     const { patientService } = await import("./api-service")

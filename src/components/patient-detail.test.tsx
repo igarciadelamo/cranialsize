@@ -159,6 +159,25 @@ describe("PatientDetail", () => {
     expect(screen.getByText(/delete measurement\?/i)).toBeInTheDocument()
   })
 
+  it("clears selected measurement when edit dialog is closed", async () => {
+    const patientWithMeasurements = {
+      ...mockPatient,
+      measurements: [{ id: "m1", date: new Date("2024-07-01"), size: 42.5, percentile: "25th-75th" }],
+    }
+    mockUsePatientStore.mockReturnValue({
+      patients: [patientWithMeasurements],
+      loadMeasurements: mockLoadMeasurements,
+      isMeasurementsLoading: false,
+      deleteMeasurement: mockDeleteMeasurement,
+    })
+    renderDetail(patientWithMeasurements)
+    await userEvent.click(screen.getByRole("tab", { name: /measurement history/i }))
+    await userEvent.click(screen.getByRole("button", { name: /edit measurement/i }))
+    expect(screen.getByTestId("edit-measurement-dialog")).toBeInTheDocument()
+    await userEvent.click(screen.getByRole("button", { name: /closeedit/i }))
+    expect(screen.queryByTestId("edit-measurement-dialog")).not.toBeInTheDocument()
+  })
+
   it("calls deleteMeasurement when confirm delete is clicked", async () => {
     const patientWithMeasurements = {
       ...mockPatient,

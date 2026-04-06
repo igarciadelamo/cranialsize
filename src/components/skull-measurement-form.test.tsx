@@ -1,7 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
+import React from "react"
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import SkullMeasurementForm from "./skull-measurement-form"
+
+vi.mock("@/components/ui/popover", () => ({
+  Popover: ({ children }: any) => <>{children}</>,
+  PopoverTrigger: ({ children, asChild }: any) =>
+    asChild ? React.cloneElement(children, { type: "button" }) : <div>{children}</div>,
+  PopoverContent: ({ children }: any) => <div>{children}</div>,
+}))
+
+vi.mock("@/components/ui/calendar", () => ({
+  Calendar: ({ onChange }: any) => (
+    <button type="button" data-testid="calendar-day" onClick={() => onChange(new Date("2024-06-15"))}>
+      Pick June 15
+    </button>
+  ),
+}))
 
 vi.mock("@/lib/auth-context", () => ({
   useAuth: () => ({ accessToken: "mock-token" }),
@@ -76,6 +92,19 @@ describe("SkullMeasurementForm", () => {
     await userEvent.click(screen.getByRole("button", { name: /save measurement/i }))
     await waitFor(() => {
       expect(mockOnSubmit).not.toHaveBeenCalled()
+    })
+  })
+
+  it("selects date from calendar and closes popover", async () => {
+    renderForm()
+    await userEvent.click(screen.getByTestId("calendar-day"))
+    // The calendar onChange fires setMeasurementDate and setCalendarOpen(false)
+    // After selection, submit should work with the selected date
+    mockAddMeasurement.mockResolvedValueOnce(undefined)
+    await userEvent.type(screen.getByLabelText(/skull circumference/i), "42")
+    await userEvent.click(screen.getByRole("button", { name: /save measurement/i }))
+    await waitFor(() => {
+      expect(mockAddMeasurement).toHaveBeenCalledOnce()
     })
   })
 
