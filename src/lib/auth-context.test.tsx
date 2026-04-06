@@ -15,7 +15,7 @@ vi.mock("@/i18n", () => ({
 }))
 
 function TestConsumer() {
-  const { user, accessToken, isLoading, login, logout } = useAuth()
+  const { user, accessToken, isLoading, login, logout, updateLanguagePreference } = useAuth()
   return (
     <div>
       <span data-testid="loading">{isLoading ? "loading" : "ready"}</span>
@@ -23,6 +23,7 @@ function TestConsumer() {
       <span data-testid="token">{accessToken ?? "no token"}</span>
       <button onClick={() => login("test-token")}>Login</button>
       <button onClick={logout}>Logout</button>
+      <button onClick={() => updateLanguagePreference("es")}>Set Spanish</button>
     </div>
   )
 }
@@ -99,6 +100,46 @@ describe("AuthProvider", () => {
       expect(screen.getByTestId("token")).toHaveTextContent("new-token")
     })
     expect(localStorage.getItem("cranialsize_token")).toBe("new-token")
+  })
+
+  it("restores language preference from localStorage on mount", async () => {
+    const i18n = (await import("@/i18n")).default
+    localStorage.setItem(
+      "cranialsize_user",
+      JSON.stringify({ name: "John", email: "john@test.com", image: "", plan: "free", languagePreference: "es" })
+    )
+    localStorage.setItem("cranialsize_token", "saved-token")
+    renderWithProvider()
+    await waitFor(() => {
+      expect(i18n.changeLanguage).toHaveBeenCalledWith("es")
+    })
+  })
+
+  it("updateLanguagePreference does nothing when there is no access token", async () => {
+    const { userService } = await import("./api-service")
+    renderWithProvider()
+    await waitFor(() => expect(screen.getByTestId("loading")).toHaveTextContent("ready"))
+    await userEvent.click(screen.getByText("Set Spanish"))
+    expect(userService.updateLanguagePreference).not.toHaveBeenCalled()
+  })
+
+  it("updateLanguagePreference updates language and user in localStorage", async () => {
+    const { userService } = await import("./api-service")
+    const i18n = (await import("@/i18n")).default
+    vi.mocked(userService.doLogin).mockResolvedValueOnce({
+      name: "Jane Doe", email: "jane@test.com", picture: "", plan: "free", token: "tok",
+    })
+    renderWithProvider()
+    await waitFor(() => expect(screen.getByTestId("loading")).toHaveTextContent("ready"))
+    await userEvent.click(screen.getByText("Login"))
+    await waitFor(() => expect(screen.getByTestId("token")).toHaveTextContent("tok"))
+    await userEvent.click(screen.getByText("Set Spanish"))
+    await waitFor(() => {
+      expect(userService.updateLanguagePreference).toHaveBeenCalledWith("tok", "es")
+      expect(i18n.changeLanguage).toHaveBeenCalledWith("es")
+    })
+    const stored = JSON.parse(localStorage.getItem("cranialsize_user")!)
+    expect(stored.languagePreference).toBe("es")
   })
 
   it("logout clears user, token and localStorage", async () => {

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
+import { act } from "react"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import Results from "./results"
@@ -31,14 +32,18 @@ const mockMeasurement = {
 
 const mockOnBack = vi.fn()
 
-function renderResults(patientOverrides = {}, measurementOverrides = {}) {
-  return render(
-    <Results
-      patient={{ ...mockPatient, ...patientOverrides }}
-      data={{ ...mockMeasurement, ...measurementOverrides }}
-      onBack={mockOnBack}
-    />
-  )
+async function renderResults(patientOverrides = {}, measurementOverrides = {}) {
+  let result: ReturnType<typeof render>
+  await act(async () => {
+    result = render(
+      <Results
+        patient={{ ...mockPatient, ...patientOverrides }}
+        data={{ ...mockMeasurement, ...measurementOverrides }}
+        onBack={mockOnBack}
+      />
+    )
+  })
+  return result!
 }
 
 beforeEach(() => {
@@ -46,13 +51,13 @@ beforeEach(() => {
 })
 
 describe("Results", () => {
-  it("renders patient name", () => {
-    renderResults()
+  it("renders patient name", async () => {
+    await renderResults()
     expect(screen.getByText(/emma johnson/i)).toBeInTheDocument()
   })
 
-  it("renders measured size", () => {
-    renderResults()
+  it("renders measured size", async () => {
+    await renderResults()
     expect(screen.getByText(/42\.5 cm/i)).toBeInTheDocument()
   })
 
@@ -77,23 +82,23 @@ describe("Results", () => {
     })
   })
 
-  it("renders percentile section", () => {
-    renderResults()
+  it("renders percentile section", async () => {
+    await renderResults()
     expect(screen.getByText(/percentile \(who\)/i)).toBeInTheDocument()
   })
 
-  it("shows percentile value when provided", () => {
-    renderResults({}, { percentile: "P65" })
+  it("shows percentile value when provided", async () => {
+    await renderResults({}, { percentile: "P65" })
     expect(screen.getByText("P65")).toBeInTheDocument()
   })
 
-  it("shows not available when percentile is missing", () => {
-    renderResults()
+  it("shows not available when percentile is missing", async () => {
+    await renderResults()
     expect(screen.getByText(/not available/i)).toBeInTheDocument()
   })
 
   it("calls onBack when back button is clicked", async () => {
-    renderResults()
+    await renderResults()
     await userEvent.click(screen.getByRole("button", { name: /back to patient/i }))
     expect(mockOnBack).toHaveBeenCalledOnce()
   })
@@ -125,9 +130,16 @@ describe("Results", () => {
 
   it("calculates estimated birth size from WHO reference data", async () => {
     // p50AtBirth=33.5, p50@6months=42.0, currentSize=42.5 → offset=0.5 → estimated=34.0
-    renderResults()
-    await waitFor(() => {
-      expect(screen.getByText(/34\.0 cm/i)).toBeInTheDocument()
-    })
+    await renderResults()
+    expect(screen.getByText(/34\.0 cm/i)).toBeInTheDocument()
+  })
+
+  it("handles WHO API error gracefully — no crash, WHO sections hidden", async () => {
+    const { referenceService } = await import("@/lib/api-service")
+    vi.mocked(referenceService.getHeadCircumferenceCurves).mockRejectedValueOnce(new Error("API Error"))
+    await renderResults()
+    expect(screen.getByText(/emma johnson/i)).toBeInTheDocument()
+    expect(screen.queryByText(/expected size/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/birth size \(estimated\)/i)).not.toBeInTheDocument()
   })
 })

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
 import AppHeader from "./app-header"
@@ -81,5 +81,29 @@ describe("AppHeader", () => {
     await userEvent.click(buttons[0])
     expect(mockNavigate).toHaveBeenCalledWith("/")
     expect(mockOnBackToPatients).not.toHaveBeenCalled()
+  })
+
+  it("shows 'Add New Patient' title on newPatient view", () => {
+    renderHeader("newPatient")
+    expect(screen.getByText("Add New Patient")).toBeInTheDocument()
+  })
+
+  it("updates header style when page is scrolled", async () => {
+    renderHeader("patients")
+    Object.defineProperty(window, "scrollY", { writable: true, configurable: true, value: 20 })
+    window.dispatchEvent(new Event("scroll"))
+    await waitFor(() => {
+      expect(document.querySelector("header")!.className).toMatch(/backdrop-blur/)
+    })
+  })
+
+  it("toggles mobile menu open when menu button is clicked", async () => {
+    renderHeader("patients")
+    const countBefore = screen.getAllByText(/cranialsize/i).length
+    const menuButtons = screen.getAllByRole("button").filter((btn) =>
+      btn.querySelector(".lucide-menu")
+    )
+    await userEvent.click(menuButtons[0])
+    expect(screen.getAllByText(/cranialsize/i).length).toBeGreaterThan(countBefore)
   })
 })

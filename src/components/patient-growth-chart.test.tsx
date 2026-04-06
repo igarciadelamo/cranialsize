@@ -1,3 +1,4 @@
+import React from "react"
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, waitFor } from "@testing-library/react"
 import PatientGrowthChart from "./patient-growth-chart"
@@ -8,9 +9,18 @@ vi.mock("recharts", () => ({
   LineChart: ({ children }: any) => <div>{children}</div>,
   Line: () => null,
   XAxis: () => null,
-  YAxis: () => null,
+  YAxis: ({ tickFormatter }: any) => { tickFormatter?.(42.5); return null },
   CartesianGrid: () => null,
-  Tooltip: () => null,
+  Tooltip: ({ content }: any) => {
+    if (!content) return null
+    return (
+      <>
+        {React.cloneElement(content, { active: false, payload: null })}
+        {React.cloneElement(content, { active: true, payload: [{ dataKey: "other", payload: {} }] })}
+        {React.cloneElement(content, { active: true, payload: [{ dataKey: "size", payload: { size: 42, ageInMonths: 6, date: "2024-07-01" } }] })}
+      </>
+    )
+  },
   Legend: () => null,
 }))
 
@@ -121,5 +131,18 @@ describe("PatientGrowthChart", () => {
     await waitFor(() => {
       expect(mockGetCurves).toHaveBeenCalledTimes(1)
     })
+  })
+
+  it("renders without crashing when WHO API call fails", async () => {
+    mockGetCurves.mockRejectedValueOnce(new Error("API Error"))
+    const patient = {
+      ...basePatient,
+      measurements: [{ id: "m1", date: new Date("2024-07-01"), size: 42.5 }],
+    }
+    render(<PatientGrowthChart patient={patient} />)
+    await waitFor(() => {
+      expect(mockGetCurves).toHaveBeenCalledTimes(1)
+    })
+    expect(screen.getAllByText(/growth chart/i)[0]).toBeInTheDocument()
   })
 })
