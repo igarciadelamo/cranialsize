@@ -6,10 +6,10 @@ import Results from "./results"
 vi.mock("@/lib/api-service", () => ({
   referenceService: {
     getHeadCircumferenceCurves: vi.fn().mockResolvedValue([
+      { month: 0, p3: 32.0, p15: 33.0, p50: 33.5, p85: 35.0, p97: 36.0 },
       { month: 6, p3: 40.0, p15: 41.0, p50: 42.0, p85: 43.0, p97: 44.0 },
     ]),
   },
-  calculateEstimatedBirthSize: vi.fn(),
 }))
 
 const birthDate = new Date("2024-01-01")
@@ -98,16 +98,36 @@ describe("Results", () => {
     expect(mockOnBack).toHaveBeenCalledOnce()
   })
 
-  it("shows estimated birth size when no birth HC provided", () => {
+  it("shows estimated birth size when no birth HC provided", async () => {
     renderResults()
-    expect(screen.getByText(/birth size \(estimated\)/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(/birth size \(estimated\)/i)).toBeInTheDocument()
+    })
     expect(screen.queryByText(/birth size \(actual\)/i)).not.toBeInTheDocument()
   })
 
-  it("shows both actual and estimated birth size when birth HC is provided", () => {
+  it("shows both actual and estimated birth size when birth HC is provided", async () => {
     renderResults({ birthHeadCircumference: 34.5 })
-    expect(screen.getByText(/birth size \(actual\)/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(/birth size \(actual\)/i)).toBeInTheDocument()
+      expect(screen.getByText(/birth size \(estimated\)/i)).toBeInTheDocument()
+    })
     expect(screen.getByText(/34\.5 cm/i)).toBeInTheDocument()
-    expect(screen.getByText(/birth size \(estimated\)/i)).toBeInTheDocument()
+  })
+
+  it("uses sex-specific WHO curves for estimated birth size", async () => {
+    const { getHeadCircumferenceCurves } = (await import("@/lib/api-service")).referenceService
+    renderResults({ sex: "M" as const })
+    await waitFor(() => {
+      expect(getHeadCircumferenceCurves).toHaveBeenCalledWith("M")
+    })
+  })
+
+  it("calculates estimated birth size from WHO reference data", async () => {
+    // p50AtBirth=33.5, p50@6months=42.0, currentSize=42.5 → offset=0.5 → estimated=34.0
+    renderResults()
+    await waitFor(() => {
+      expect(screen.getByText(/34\.0 cm/i)).toBeInTheDocument()
+    })
   })
 })
