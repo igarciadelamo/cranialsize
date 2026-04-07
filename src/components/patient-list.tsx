@@ -52,13 +52,15 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
         const nameB = `${b.firstName} ${b.lastName}`.toLowerCase()
         return sortDirection === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA)
       } else if (sortField === "age") {
+        // asc = youngest first (smallest age = most recent birthDate = largest timestamp)
         return sortDirection === "asc"
-          ? a.birthDate.getTime() - b.birthDate.getTime()
-          : b.birthDate.getTime() - a.birthDate.getTime()
+          ? b.birthDate.getTime() - a.birthDate.getTime()
+          : a.birthDate.getTime() - b.birthDate.getTime()
       } else {
-        return sortDirection === "asc"
-          ? a.measurements.length - b.measurements.length
-          : b.measurements.length - a.measurements.length
+        // measurements is [] in list view — use measurementCount from API
+        const countA = a.measurementCount ?? a.measurements.length
+        const countB = b.measurementCount ?? b.measurements.length
+        return sortDirection === "asc" ? countA - countB : countB - countA
       }
     })
 
