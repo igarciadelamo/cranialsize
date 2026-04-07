@@ -89,6 +89,7 @@ describe("AuthProvider", () => {
       picture: "https://example.com/avatar.jpg",
       plan: "free",
       token: "new-token",
+      language_preference: null,
     })
 
     renderWithProvider()
@@ -127,7 +128,7 @@ describe("AuthProvider", () => {
     const { userService } = await import("./api-service")
     const i18n = (await import("@/i18n")).default
     vi.mocked(userService.doLogin).mockResolvedValueOnce({
-      name: "Jane Doe", email: "jane@test.com", picture: "", plan: "free", token: "tok",
+      name: "Jane Doe", email: "jane@test.com", picture: "", plan: "free", token: "tok", language_preference: null,
     })
     renderWithProvider()
     await waitFor(() => expect(screen.getByTestId("loading")).toHaveTextContent("ready"))

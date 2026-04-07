@@ -62,6 +62,9 @@
     "record_one": "{{count}} registro",
     "record_other": "{{count}} registros",
     "deleteTitle": "¿Eliminar medida?",
-    "deleteDescription": "Se eliminará permanentemente la medida del {{date}}. Esta acción no se puede deshacer."
+    "deleteDescription": "Se eliminará permanentemente la medida del {{date}}. Esta acción no se puede deshacer.",
+    "exportPdf": "Exportar PDF",
+    "exportPdfError": "Error al exportar el PDF",
+    "exportPdfExporting": "Generando PDF..."
   }
 }

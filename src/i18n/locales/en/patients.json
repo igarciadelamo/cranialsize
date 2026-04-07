@@ -62,6 +62,9 @@
     "record_one": "{{count}} record",
     "record_other": "{{count}} records",
     "deleteTitle": "Delete measurement?",
-    "deleteDescription": "This will permanently delete the measurement from {{date}}. This action cannot be undone."
+    "deleteDescription": "This will permanently delete the measurement from {{date}}. This action cannot be undone.",
+    "exportPdf": "Export PDF",
+    "exportPdfError": "Failed to export PDF",
+    "exportPdfExporting": "Generating PDF..."
   }
 }

@@ -3,7 +3,7 @@ import { referenceService, type ReferencePoint } from "@/lib/api-service"
 import { calculateExpectedSize } from "@/lib/skull-calculations"
 import type { Measurement, Patient } from "@/lib/types"
 import { differenceInDays, format } from "date-fns"
-import { useEffect, useMemo, useState, type FC } from "react"
+import { forwardRef, useEffect, useMemo, useState, type FC } from "react"
 import {
   CartesianGrid,
   Legend,
@@ -23,6 +23,7 @@ function decimalMonths(date: Date, birthDate: Date): number {
 
 interface PatientGrowthChartProps {
   patient: Patient
+  containerRef?: React.Ref<HTMLDivElement>
 }
 
 const REFERENCE_LINES = [
@@ -61,7 +62,7 @@ const CustomTooltip: FC<any> = ({ active, payload }) => {
   )
 }
 
-export default function PatientGrowthChart({ patient }: PatientGrowthChartProps) {
+const PatientGrowthChart = forwardRef<HTMLDivElement, PatientGrowthChartProps>(function PatientGrowthChart({ patient }, ref) {
   const [referenceCurves, setReferenceCurves] = useState<ReferencePoint[]>([])
 
   useEffect(() => {
@@ -106,7 +107,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
 
   if (patient.measurements.length === 0) {
     return (
-      <Card className="shadow-md border-0 overflow-hidden">
+      <Card ref={ref} className="shadow-md border-0 overflow-hidden">
         <CardHeader className="bg-gradient-secondary pb-3">
           <CardTitle className="text-lg font-semibold text-gray-800">Growth Chart</CardTitle>
         </CardHeader>
@@ -127,7 +128,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
   }
 
   return (
-    <Card className="shadow-md border-0 overflow-hidden">
+    <Card ref={ref} className="shadow-md border-0 overflow-hidden">
       <CardHeader className="bg-gradient-secondary pb-3">
         <CardTitle className="text-lg font-semibold text-gray-800">Growth Chart</CardTitle>
       </CardHeader>
@@ -173,6 +174,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
                   strokeDasharray={dash}
                   dot={false}
                   name={label}
+                  isAnimationActive={false}
                 />
               ))}
 
@@ -185,6 +187,7 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
                 name="Patient"
                 activeDot={{ r: 8, stroke: "#0d9488", strokeWidth: 2, fill: "#fff" }}
                 dot={{ stroke: "#0d9488", strokeWidth: 2, r: 4, fill: "#fff" }}
+                isAnimationActive={false}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -220,7 +223,9 @@ export default function PatientGrowthChart({ patient }: PatientGrowthChartProps)
       </CardContent>
     </Card>
   )
-}
+})
+
+export default PatientGrowthChart
 
 function calculateEstimatedBirthSizeFromMeasurements(measurements: Measurement[], birthDate: Date): number {
   const sorted = [...measurements].sort((a, b) => a.date.getTime() - b.date.getTime())
