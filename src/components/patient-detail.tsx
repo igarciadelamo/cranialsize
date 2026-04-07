@@ -16,9 +16,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Measurement, Patient } from "@/lib/types"
 import { useAuth } from "@/lib/auth-context"
 import { usePatientStore } from "@/lib/patient-store"
+import html2canvas from "html2canvas"
 import { motion } from "framer-motion"
-import { Calendar, Pencil, Plus, Ruler, Trash2 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { Calendar, FileDown, Pencil, Plus, Ruler, Trash2 } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
+import { pdfService } from "@/lib/api-service"
 import { useTranslation } from "react-i18next"
 import { useLocalDate } from "@/i18n/use-local-date"
 
@@ -33,6 +36,8 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
+  const [isExporting, setIsExporting] = useState(false)
+  const chartRef = useRef<HTMLDivElement>(null)
   const { accessToken } = useAuth()
   const { patients, loadMeasurements, isMeasurementsLoading, deleteMeasurement } = usePatientStore()
   const patient = patients.find((p) => p.id === patientProp.id) ?? patientProp
@@ -45,6 +50,26 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
       loadMeasurements(accessToken, patientProp.id)
     }
   }, [patientProp.id, accessToken])
+
+  const handleExportPdf = async () => {
+    if (!accessToken || !chartRef.current) return
+    setIsExporting(true)
+    try {
+      const canvas = await html2canvas(chartRef.current, { scale: 2, backgroundColor: "#ffffff" })
+      const chartImage = canvas.toDataURL("image/png")
+      const blob = await pdfService.exportPatientPdf(accessToken, patient.id, chartImage)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `cranialsize_${patient.firstName}_${patient.lastName}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      toast.error(t("detail.exportPdfError"))
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   const handleDeleteMeasurement = async () => {
     if (!selectedMeasurement?.id || !accessToken) return
@@ -65,13 +90,23 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                   {patient.firstName} {patient.lastName}
                 </CardTitle>
               </div>
-              <Button
-                onClick={onAddMeasurement}
-                className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-sm shadow-teal-200/50"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {t("detail.newMeasurement")}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleExportPdf}
+                  disabled={isExporting || patient.measurements.length === 0}
+                >
+                  <FileDown className="h-4 w-4 mr-2" />
+                  {isExporting ? t("detail.exportPdfExporting") : t("detail.exportPdf")}
+                </Button>
+                <Button
+                  onClick={onAddMeasurement}
+                  className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-sm shadow-teal-200/50"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t("detail.newMeasurement")}
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -112,7 +147,7 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                     <div className="h-8 w-8 border-4 border-t-teal-600 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
                   </div>
                 ) : (
-                  <PatientGrowthChart patient={patient} />
+                  <PatientGrowthChart ref={chartRef} patient={patient} />
                 )}
               </TabsContent>
               <TabsContent value="measurements" className="space-y-4">

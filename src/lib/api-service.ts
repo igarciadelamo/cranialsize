@@ -131,6 +131,21 @@ export const referenceService = {
   },
 }
 
+export const pdfService = {
+  async exportPatientPdf(token: string, patientId: string, chartImage: string): Promise<Blob> {
+    const response = await fetch(`${API_BASE_URL}/patients/${patientId}/export-pdf`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ chart_image: chartImage }),
+    })
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
+    return response.blob()
+  },
+}
+
 export const userService = {
   async doLogin(idToken: string): Promise<UserResponse> {
     const response = await fetch(`${API_BASE_URL}/users/login`, {
