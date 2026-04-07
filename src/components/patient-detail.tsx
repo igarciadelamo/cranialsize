@@ -91,14 +91,16 @@ export default function PatientDetail({ patient: patientProp, onBack, onAddMeasu
                 </CardTitle>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleExportPdf}
-                  disabled={isExporting || patient.measurements.length === 0}
-                >
-                  <FileDown className="h-4 w-4 mr-2" />
-                  {isExporting ? t("detail.exportPdfExporting") : t("detail.exportPdf")}
-                </Button>
+                {patient.measurements.length > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={handleExportPdf}
+                    disabled={isExporting}
+                  >
+                    <FileDown className="h-4 w-4 mr-2" />
+                    {isExporting ? t("detail.exportPdfExporting") : t("detail.exportPdf")}
+                  </Button>
+                )}
                 <Button
                   onClick={onAddMeasurement}
                   className="bg-gradient-primary hover:opacity-90 transition-opacity shadow-sm shadow-teal-200/50"
