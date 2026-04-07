@@ -32,7 +32,7 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null)
   const [patientToEdit, setPatientToEdit] = useState<Patient | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [sortField, setSortField] = useState<"name" | "age" | "records">("name")
+  const [sortField, setSortField] = useState<"name" | "age" | "birthDate" | "records">("name")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([])
 
@@ -46,26 +46,39 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
         patient.lastName.toLowerCase().includes(searchQuery.toLowerCase()),
     )
 
+    const nameTiebreak = (a: Patient, b: Patient) =>
+      `${a.firstName} ${a.lastName}`.toLowerCase().localeCompare(`${b.firstName} ${b.lastName}`.toLowerCase())
+
     const sorted = [...filtered].sort((a, b) => {
       if (sortField === "name") {
         const nameA = `${a.firstName} ${a.lastName}`.toLowerCase()
         const nameB = `${b.firstName} ${b.lastName}`.toLowerCase()
         return sortDirection === "asc" ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA)
       } else if (sortField === "age") {
-        return sortDirection === "asc"
+        // asc = youngest first (most recent birthDate = largest timestamp)
+        const diff = sortDirection === "asc"
+          ? b.birthDate.getTime() - a.birthDate.getTime()
+          : a.birthDate.getTime() - b.birthDate.getTime()
+        return diff !== 0 ? diff : nameTiebreak(a, b)
+      } else if (sortField === "birthDate") {
+        // asc = earliest birthDate first (oldest patient)
+        const diff = sortDirection === "asc"
           ? a.birthDate.getTime() - b.birthDate.getTime()
           : b.birthDate.getTime() - a.birthDate.getTime()
+        return diff !== 0 ? diff : nameTiebreak(a, b)
       } else {
-        return sortDirection === "asc"
-          ? a.measurements.length - b.measurements.length
-          : b.measurements.length - a.measurements.length
+        // measurements is [] in list view — use measurementCount from API
+        const countA = a.measurementCount ?? a.measurements.length
+        const countB = b.measurementCount ?? b.measurements.length
+        const diff = sortDirection === "asc" ? countA - countB : countB - countA
+        return diff !== 0 ? diff : nameTiebreak(a, b)
       }
     })
 
     setFilteredPatients(sorted)
   }, [patients, searchQuery, sortField, sortDirection])
 
-  const handleSort = (field: "name" | "age" | "records") => {
+  const handleSort = (field: "name" | "age" | "birthDate" | "records") => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc")
     } else {
@@ -134,8 +147,13 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
                   />
                 )}
               </div>
-              <div className="col-span-3 flex items-center cursor-pointer">
+              <div className="col-span-3 flex items-center cursor-pointer" onClick={() => handleSort("birthDate")}>
                 <span>{t("list.colBirthDate")}</span>
+                {sortField === "birthDate" && (
+                  <ArrowUpDown
+                    className={`ml-1 h-3 w-3 ${sortDirection === "desc" ? "rotate-180" : ""} transition-transform`}
+                  />
+                )}
               </div>
               <div className="col-span-2 flex items-center cursor-pointer" onClick={() => handleSort("records")}>
                 <span>{t("list.colRecords")}</span>
