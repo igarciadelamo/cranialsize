@@ -33,11 +33,6 @@ export const useAuth = () => useContext(AuthContext)
 const STORAGE_KEY = "cranialsize_user"
 const TOKEN_KEY = "cranialsize_token"
 
-function normalizeLanguage(lang: string): string {
-  const code = lang.split("-")[0].toLowerCase()
-  return code === "es" ? "es" : "en"
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
@@ -66,15 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (idToken: string) => {
-    const data: UserResponse = await userService.doLogin(idToken)
+    const data: UserResponse = await userService.doLogin(idToken, i18n.resolvedLanguage ?? "es")
 
-    let lang = data.language_preference ?? null
-
-    if (!lang) {
-      lang = normalizeLanguage(navigator.language)
-      userService.updateLanguagePreference(data.token, lang).catch(() => {})
-    }
-
+    const lang = data.language_preference ?? i18n.language
     i18n.changeLanguage(lang)
 
     const userData: User = {

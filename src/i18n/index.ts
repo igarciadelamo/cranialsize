@@ -30,7 +30,7 @@ i18n
         auth: esAuth,
       },
     },
-    fallbackLng: "en",
+    fallbackLng: "es",
     defaultNS: "common",
     detection: {
       order: ["localStorage", "navigator"],
