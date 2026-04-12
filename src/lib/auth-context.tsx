@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (idToken: string) => {
-    const data: UserResponse = await userService.doLogin(idToken, i18n.resolvedLanguage ?? "en")
+    const data: UserResponse = await userService.doLogin(idToken, i18n.resolvedLanguage ?? "es")
 
     const lang = data.language_preference ?? i18n.language
     i18n.changeLanguage(lang)
