@@ -147,11 +147,11 @@ export const pdfService = {
 }
 
 export const userService = {
-  async doLogin(idToken: string): Promise<UserResponse> {
+  async doLogin(idToken: string, language: string): Promise<UserResponse> {
     const response = await fetch(`${API_BASE_URL}/users/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id_token: idToken }),
+      body: JSON.stringify({ id_token: idToken, language }),
     })
 
     if (!response.ok) {
