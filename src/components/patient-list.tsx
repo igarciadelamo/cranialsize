@@ -238,21 +238,38 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
                   </motion.div>
                 ))}
               </motion.div>
-            ) : (
+            ) : searchQuery ? (
               <div className="p-8 text-center">
                 <div className="mx-auto h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
                   <Search className="h-6 w-6 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-1">{t("list.noResults")}</h3>
-                <p className="text-gray-500">
-                  {searchQuery ? t("list.noResultsSearch") : t("list.noResultsEmpty")}
-                </p>
-                {!searchQuery && (
-                  <Button onClick={onAddNewPatient} className="mt-4 bg-teal-600 hover:bg-teal-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("list.addPatient")}
-                  </Button>
-                )}
+                <p className="text-gray-500">{t("list.noResultsSearch")}</p>
+              </div>
+            ) : (
+              <div className="p-10 text-center">
+                <div className="mx-auto h-16 w-16 rounded-full bg-teal-50 flex items-center justify-center mb-5">
+                  <User className="h-8 w-8 text-teal-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t("list.emptyTitle")}</h3>
+                <p className="text-gray-500 mb-8 max-w-xs mx-auto">{t("list.emptyDesc")}</p>
+                <div className="flex justify-center gap-8 mb-8 text-sm text-gray-500">
+                  {([1, 2, 3] as const).map((step) => (
+                    <div key={step} className="flex flex-col items-center gap-2 max-w-[100px]">
+                      <div className="h-8 w-8 rounded-full bg-teal-100 text-teal-600 font-semibold flex items-center justify-center">
+                        {step}
+                      </div>
+                      <span>{t(`list.emptyStep${step}`)}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  onClick={onAddNewPatient}
+                  className="bg-gradient-primary hover:opacity-90 transition-opacity rounded-full shadow-md shadow-teal-200/50"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t("list.addFirstPatient")}
+                </Button>
               </div>
             )}
           </CardContent>
