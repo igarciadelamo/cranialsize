@@ -90,8 +90,8 @@ describe("PatientList", () => {
   it("shows empty state with add button when no patients and no search", () => {
     mockUsePatientStore.mockReturnValue({ patients: [], isLoading: false })
     renderList()
-    expect(screen.getByText(/add your first patient/i)).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: /add patient/i })).toBeInTheDocument()
+    expect(screen.getByText(/no patients yet/i)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /add first patient/i })).toBeInTheDocument()
   })
 
   it("shows correct measurement count for each patient", () => {
