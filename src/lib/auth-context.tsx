@@ -17,6 +17,7 @@ interface AuthContextType {
   login: (idToken: string) => Promise<void>
   logout: () => void
   updateLanguagePreference: (lang: string) => Promise<void>
+  deleteAccount: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -26,6 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: () => {},
   updateLanguagePreference: async () => {},
+  deleteAccount: async () => {},
 })
 
 export const useAuth = () => useContext(AuthContext)
@@ -99,8 +101,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  const deleteAccount = async () => {
+    if (!accessToken) return
+    await userService.deleteAccount(accessToken)
+    logout()
+  }
+
   return (
-    <AuthContext.Provider value={{ user, accessToken, isLoading, login, logout, updateLanguagePreference }}>
+    <AuthContext.Provider value={{ user, accessToken, isLoading, login, logout, updateLanguagePreference, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   )

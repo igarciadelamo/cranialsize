@@ -2,17 +2,21 @@ import AppHeader from "@/components/app-header"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { FcGoogle } from "react-icons/fc"
 import { useTranslation } from "react-i18next"
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 export default function Settings() {
-  const { user, updateLanguagePreference } = useAuth()
+  const { user, updateLanguagePreference, deleteAccount } = useAuth()
   const { t, i18n } = useTranslation("auth")
   const [isUpdating, setIsUpdating] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const navigate = useNavigate()
 
   if (!user) return null
 
@@ -21,6 +25,16 @@ export default function Settings() {
     : "U"
 
   const currentLang = i18n.language.startsWith("es") ? "es" : "en"
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true)
+    try {
+      await deleteAccount()
+      navigate("/signin")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   const handleLanguageChange = async (lang: string) => {
     if (lang === currentLang || isUpdating) return
@@ -116,6 +130,40 @@ export default function Settings() {
                       <span className="h-1.5 w-1.5 bg-teal-500 rounded-full mr-1"></span>
                       {t("settings.active")}
                     </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-red-100 overflow-hidden">
+                <div className="bg-red-50/80 px-6 py-3 border-b border-red-100/50">
+                  <h2 className="text-sm font-medium text-red-700">{t("settings.dangerZone")}</h2>
+                </div>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="text-sm text-gray-600">{t("settings.deleteAccountDescription")}</p>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button className="shrink-0 px-4 h-9 rounded-md border border-red-300 text-sm font-medium text-red-600 bg-white hover:bg-red-50 transition-colors">
+                          {t("settings.deleteAccount")}
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{t("settings.deleteAccountConfirmTitle")}</AlertDialogTitle>
+                          <AlertDialogDescription>{t("settings.deleteAccountConfirmDescription")}</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t("settings.deleteAccountCancel")}</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteAccount}
+                            disabled={isDeleting}
+                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                          >
+                            {t("settings.deleteAccountConfirm")}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </CardContent>
               </Card>

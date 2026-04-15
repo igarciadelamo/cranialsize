@@ -167,4 +167,8 @@ export const userService = {
       body: JSON.stringify({ language_preference: languagePreference }),
     })
   },
+
+  async deleteAccount(token: string): Promise<void> {
+    return apiFetch("/users/me", token, { method: "DELETE" })
+  },
 }
