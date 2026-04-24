@@ -8,6 +8,7 @@ export interface User {
   image: string
   plan: "free" | "premium"
   languagePreference?: string
+  patientCount: number
 }
 
 interface AuthContextType {
@@ -18,6 +19,7 @@ interface AuthContextType {
   logout: () => void
   updateLanguagePreference: (lang: string) => Promise<void>
   deleteAccount: () => Promise<void>
+  incrementPatientCount: () => void
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -28,6 +30,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
   updateLanguagePreference: async () => {},
   deleteAccount: async () => {},
+  incrementPatientCount: () => {},
 })
 
 export const useAuth = () => useContext(AuthContext)
@@ -74,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       image: data.picture,
       plan: data.plan,
       languagePreference: lang,
+      patientCount: data.patient_count,
     }
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
@@ -101,6 +105,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  const incrementPatientCount = () => {
+    setUser((prev) => {
+      if (!prev) return prev
+      const updated = { ...prev, patientCount: prev.patientCount + 1 }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+      return updated
+    })
+  }
+
   const deleteAccount = async () => {
     if (!accessToken) return
     await userService.deleteAccount(accessToken)
@@ -108,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, isLoading, login, logout, updateLanguagePreference, deleteAccount }}>
+    <AuthContext.Provider value={{ user, accessToken, isLoading, login, logout, updateLanguagePreference, deleteAccount, incrementPatientCount }}>
       {children}
     </AuthContext.Provider>
   )

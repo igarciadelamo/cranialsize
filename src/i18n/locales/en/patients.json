@@ -20,7 +20,11 @@
     "record_one": "{{count}} record",
     "record_other": "{{count}} records",
     "deleteTitle": "Delete patient?",
-    "deleteDescription": "This will permanently delete {{firstName}} {{lastName}} and all their measurements. This action cannot be undone."
+    "deleteDescription": "This will permanently delete {{firstName}} {{lastName}} and all their measurements. This action cannot be undone.",
+    "deleteCountWarning": "Remember that deleted patients still count toward your limit of 10.",
+    "patientCount": "{{count}} of 10 patients",
+    "limitReached": "You've reached the 10-patient limit of the Free Plan.",
+    "limitReachedButton": "Limit reached"
   },
   "form": {
     "titleNew": "Add New Patient",

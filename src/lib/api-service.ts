@@ -6,6 +6,7 @@ export interface UserResponse {
   picture: string
   plan: "free" | "premium"
   language_preference: string | null
+  patient_count: number
   token: string
 }
 
@@ -40,7 +41,9 @@ async function apiFetch<T>(path: string, token: string, options?: RequestInit): 
   })
 
   if (!response.ok) {
-    throw new Error(`${response.status} ${response.statusText}`)
+    let detail: string | undefined
+    try { detail = (await response.json()).detail } catch {}
+    throw new Error(detail ?? `${response.status} ${response.statusText}`)
   }
 
   if (response.status === 204) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Search, Plus, Calendar, User, ArrowUpDown, Pencil, Trash2 } from "lucide-react"
+import { Search, Plus, Calendar, User, ArrowUpDown, Pencil, Trash2, Lock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,7 +28,9 @@ interface PatientListProps {
 
 export default function PatientList({ onPatientSelect, onAddNewPatient }: PatientListProps) {
   const { patients, isLoading, deletePatient } = usePatientStore()
-  const { accessToken } = useAuth()
+  const { accessToken, user } = useAuth()
+  const isFree = user?.plan === "free"
+  const atLimit = isFree && (user?.patientCount ?? 0) >= 10
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null)
   const [patientToEdit, setPatientToEdit] = useState<Patient | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
@@ -116,13 +118,25 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button
-            onClick={onAddNewPatient}
-            className="bg-gradient-primary hover:opacity-90 transition-opacity h-12 rounded-full shadow-md shadow-teal-200/50"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {t("list.newPatient")}
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {isFree && (
+              <span className={`text-xs ${atLimit ? "text-red-500 font-medium" : "text-gray-400"}`}>
+                {t("list.patientCount", { count: user?.patientCount ?? 0 })}
+              </span>
+            )}
+            <Button
+              onClick={atLimit ? undefined : onAddNewPatient}
+              disabled={atLimit}
+              className={atLimit
+                ? "h-12 rounded-full bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                : "bg-gradient-primary hover:opacity-90 transition-opacity h-12 rounded-full shadow-md shadow-teal-200/50"
+              }
+              title={atLimit ? t("list.limitReached") : undefined}
+            >
+              {atLimit ? <Lock className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+              {atLimit ? t("list.limitReachedButton") : t("list.newPatient")}
+            </Button>
+          </div>
         </div>
 
         <Card className="shadow-md border-0 overflow-hidden">
@@ -292,6 +306,11 @@ export default function PatientList({ onPatientSelect, onAddNewPatient }: Patien
                 firstName: patientToDelete?.firstName,
                 lastName: patientToDelete?.lastName,
               })}
+              {isFree && (
+                <span className="block mt-2 text-amber-600">
+                  {t("list.deleteCountWarning")}
+                </span>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

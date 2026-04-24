@@ -41,7 +41,7 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
     birthHeadCircumference?: string
   }>({})
 
-  const { accessToken } = useAuth()
+  const { accessToken, incrementPatientCount } = useAuth()
   const { addPatient } = usePatientStore()
   const { t } = useTranslation("patients")
   const { formatLong } = useLocalDate()
@@ -80,9 +80,14 @@ export default function NewPatientForm({ onCancel, onComplete }: NewPatientFormP
         }
 
         addPatient(newPatient)
+        incrementPatientCount()
         onComplete(newPatient)
       } catch (e) {
-        toast.error(t("form.saveError"))
+        if (e instanceof Error && e.message === "patient_limit_reached") {
+          toast.error(t("list.limitReached"))
+        } else {
+          toast.error(t("form.saveError"))
+        }
       } finally {
         setIsSubmitting(false)
       }

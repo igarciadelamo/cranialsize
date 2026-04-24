@@ -20,7 +20,11 @@
     "record_one": "{{count}} registro",
     "record_other": "{{count}} registros",
     "deleteTitle": "¿Eliminar paciente?",
-    "deleteDescription": "Se eliminará permanentemente a {{firstName}} {{lastName}} y todas sus medidas. Esta acción no se puede deshacer."
+    "deleteDescription": "Se eliminará permanentemente a {{firstName}} {{lastName}} y todas sus medidas. Esta acción no se puede deshacer.",
+    "deleteCountWarning": "Recuerda que los pacientes eliminados siguen contando hacia tu límite de 10.",
+    "patientCount": "{{count}} de 10 pacientes",
+    "limitReached": "Has alcanzado el límite de 10 pacientes del Plan Gratuito.",
+    "limitReachedButton": "Límite alcanzado"
   },
   "form": {
     "titleNew": "Añadir nuevo paciente",

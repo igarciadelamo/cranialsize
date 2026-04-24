@@ -6,7 +6,7 @@ import NewPatientForm from "./new-patient-form"
 
 // Mock auth context
 vi.mock("@/lib/auth-context", () => ({
-  useAuth: () => ({ accessToken: "mock-token" }),
+  useAuth: () => ({ accessToken: "mock-token", incrementPatientCount: vi.fn() }),
 }))
 
 // Mock patient store
